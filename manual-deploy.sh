@@ -1,6 +1,6 @@
 ### VARIABLES TO CHANGE - START
-PROJECT_ID=
-SERVICE_NAME=
+PROJECT_ID=kevin-beltran-pena-uprm
+SERVICE_NAME=fantastic-four-website
 ### VARIABLES TO CHANGE - END
 
 # ----------- Manual Deployment ------------ #

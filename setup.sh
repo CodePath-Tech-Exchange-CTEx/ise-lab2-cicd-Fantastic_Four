@@ -1,9 +1,9 @@
 ### VARIABLES TO CHANGE - START
-PROJECT_ID=
-PROJECT_NUMBER=
-SERVICE_NAME=
-GITHUB_ORG=
-GITHUB_REPO=
+PROJECT_ID=kevin-beltran-pena-uprm
+PROJECT_NUMBER=732788650099
+SERVICE_NAME=fantastic-four-website
+GITHUB_ORG=https://github.com/CodePath-Tech-Exchange-CTEx/ise-lab2-cicd-Fantastic_Four#
+GITHUB_REPO=https://github.com/CodePath-Tech-Exchange-CTEx/ise-lab2-cicd-Fantastic_Four.git
 ### VARIABLES TO CHANGE - END
 
 # ----------- Set Up GCP Project ----------- #
