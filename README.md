@@ -1,8 +1,11 @@
-# TODO: Replace with your team name
+# FANTASTIC FOUR
 
 ## Our Team
 
-TODO: Replace with your team members
+# Kevin S. Beltran Pena
+# Amari Coleman
+# Stephanie Adeoye
+# Matteo Morais
 
 # Setup
 
