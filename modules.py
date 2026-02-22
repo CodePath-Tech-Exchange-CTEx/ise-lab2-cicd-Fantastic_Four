@@ -8,7 +8,7 @@
 #############################################################################
 
 from internals import create_component
-
+import streamlit as st # import streamlit
 
 # This one has been written for you as an example. You may change it as wanted.
 def display_my_custom_component(value):
@@ -35,8 +35,29 @@ def display_post(username, user_image, timestamp, content, post_image):
 
 
 def display_activity_summary(workouts_list):
-    """Write a good docstring here."""
-    pass
+    # The Guard Clause - updated to use the correct variable name
+    if not workouts_list:
+        st.write("No activity to summarize yet!")
+        return
+
+    # Set up our starting variables
+    total_calories = 0
+    total_distance = 0
+    total_steps = 0
+
+    # Aggregate the data from the list 
+    for workout in workouts_list: 
+        total_calories += workout['calories_burned']
+        total_distance += workout['distance']
+        total_steps += workout['steps']
+    
+    # Display the beautiful summary UI
+    st.subheader("Your Activity Summary")
+    
+    # Display metrics directly (so our unit test can see them!)
+    st.metric(label="Total Calories", value=f"{total_calories} kcal")
+    st.metric(label="Total Distance", value=f"{total_distance} km")
+    st.metric(label="Total Steps", value=total_steps)
 
 
 def display_recent_workouts(workouts_list):

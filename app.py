@@ -20,6 +20,12 @@ def display_app_page():
     value = st.text_input('Enter your name')
     display_my_custom_component(value)
 
+    # Fetch the workout data for the user
+    user_workouts = get_user_workouts(userId)
+    
+    # Call your function to display it on the screen!
+    display_activity_summary(user_workouts)
+
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
