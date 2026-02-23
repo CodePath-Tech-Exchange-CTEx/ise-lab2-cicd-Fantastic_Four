@@ -14,11 +14,57 @@ from unittest.mock import patch # import patch
 # Write your tests below
 
 class TestDisplayPost(unittest.TestCase):
-    """Tests the display_post function."""
+# Block written by ChatGPT
+    @patch('streamlit.divider')
+    @patch('streamlit.image')
+    @patch('streamlit.write')
+    @patch('streamlit.caption')
+    @patch('streamlit.columns')
+    def test_display_post_renders_content(
+        self, mock_columns, mock_caption, mock_write, mock_image, mock_divider
+    ):
+# Block written by ChatGPT
+        mock_col1 = unittest.mock.MagicMock()
+        mock_col2 = unittest.mock.MagicMock()
+        mock_columns.return_value = [mock_col1, mock_col2]
 
-    def test_foo(self):
-        """Tests foo."""
-        pass
+        username = "Amari"
+        user_image = "profile.png"
+        timestamp = "Today"
+        content = "This is a test post."
+        post_image = "post.png"
+
+        display_post(username, user_image, timestamp, content, post_image)
+
+        mock_columns.assert_called_once()
+        mock_caption.assert_called_with(timestamp)
+        mock_write.assert_any_call(f"**{username}**")
+        mock_write.assert_any_call(content)
+        self.assertTrue(mock_image.called)
+        mock_divider.assert_called_once()
+
+    @patch('streamlit.divider')
+    @patch('streamlit.image')
+    @patch('streamlit.write')
+    @patch('streamlit.caption')
+    @patch('streamlit.columns')
+    def test_display_post_without_image(
+        self, mock_columns, mock_caption, mock_write, mock_image, mock_divider
+    ):
+        mock_col1 = unittest.mock.MagicMock()
+        mock_col2 = unittest.mock.MagicMock()
+        mock_columns.return_value = [mock_col1, mock_col2]
+
+        display_post(
+            "Amari",
+            "profile.png",
+            "Today",
+            "No image post",
+            None
+        )
+
+        self.assertEqual(mock_image.call_count, 1)
+        mock_divider.assert_called_once()
 
 
 class TestDisplayActivitySummary(unittest.TestCase):
