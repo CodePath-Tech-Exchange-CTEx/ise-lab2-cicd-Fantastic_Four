@@ -48,6 +48,7 @@ class TestDisplayPost(unittest.TestCase):
     @patch('streamlit.write')
     @patch('streamlit.caption')
     @patch('streamlit.columns')
+    
     def test_display_post_without_image(
         self, mock_columns, mock_caption, mock_write, mock_image, mock_divider
     ):
