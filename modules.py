@@ -77,8 +77,31 @@ def display_activity_summary(workouts_list):
 
 
 def display_recent_workouts(workouts_list):
-    """Write a good docstring here."""
-    pass
+    """Displays users workouts with information like steps walked, calories burned, total distance walked e.t.c"""
+    st.subheader("Recent Workouts") # Line written by Gemini
+
+    if not workouts_list:
+        st.write("No recent workouts to display.")
+
+    # Loop through each individual workout in the list
+    for workout in workouts_list:
+        with st.container(border=True): # Creates a nice box around each workout
+            col1, col2 = st.columns([1, 2]) # Line written by Gemini
+            
+            with col1:
+                # Display the date/time of this specific workout
+                st.write(f"**Workout on:**") # Line written by Gemini
+                st.write(workout['start_timestamp']) # Line written by Gemini
+            
+            with col2:
+                # Use columns inside the container for the stats
+                m1, m2, m3 = st.columns(3) # Line written by Gemini
+                m1.metric("Distance", f"{workout['distance']} km") # Line written by Gemini
+                m2.metric("Steps", workout['steps']) # Line written by Gemini
+                m3.metric("Burned", f"{workout['calories_burned']} kcal") # Line written by Gemini
+        
+        st.write("") # Adds a small bit of spacing between containers
+
 
 
 def display_genai_advice(timestamp, content, image):
