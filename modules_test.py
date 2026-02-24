@@ -14,7 +14,7 @@ from unittest.mock import patch # import patch
 # Write your tests below
 
 class TestDisplayPost(unittest.TestCase):
-# Block written by ChatGPT
+
     @patch('streamlit.divider')
     @patch('streamlit.image')
     @patch('streamlit.write')
@@ -23,10 +23,15 @@ class TestDisplayPost(unittest.TestCase):
     def test_display_post_renders_content(
         self, mock_columns, mock_caption, mock_write, mock_image, mock_divider
     ):
-# Block written by ChatGPT
         mock_col1 = unittest.mock.MagicMock()
         mock_col2 = unittest.mock.MagicMock()
-        mock_columns.return_value = [mock_col1, mock_col2]
+
+        mock_col1.__enter__.return_value = mock_col1
+        mock_col1.__exit__.return_value = None
+        mock_col2.__enter__.return_value = mock_col2
+        mock_col2.__exit__.return_value = None
+
+        mock_columns.return_value = (mock_col1, mock_col2)
 
         username = "Amari"
         user_image = "profile.png"
@@ -48,13 +53,18 @@ class TestDisplayPost(unittest.TestCase):
     @patch('streamlit.write')
     @patch('streamlit.caption')
     @patch('streamlit.columns')
-    
     def test_display_post_without_image(
         self, mock_columns, mock_caption, mock_write, mock_image, mock_divider
     ):
         mock_col1 = unittest.mock.MagicMock()
         mock_col2 = unittest.mock.MagicMock()
-        mock_columns.return_value = [mock_col1, mock_col2]
+
+        mock_col1.__enter__.return_value = mock_col1
+        mock_col1.__exit__.return_value = None
+        mock_col2.__enter__.return_value = mock_col2
+        mock_col2.__exit__.return_value = None
+
+        mock_columns.return_value = (mock_col1, mock_col2)
 
         display_post(
             "Amari",
