@@ -32,11 +32,10 @@ def display_my_custom_component(value):
 def display_post(username, user_image, timestamp, content, post_image):
     """Displays a formatted social media post."""
 
-    col1 = st.columns([1,5])
-    col2 = st.columns([1,5])
+    col1, col2 = st.columns([1, 5])
 
     with col1:
-        st.image(user_image, width = 60)
+        st.image(user_image, width=60)
 
     with col2:
         st.write(f"**{username}**")
@@ -44,8 +43,8 @@ def display_post(username, user_image, timestamp, content, post_image):
 
     st.write(content)
 
-    if post_image:
-        st.image(post_image, use_container_width = True)
+    if post_image is not None:
+        st.image(post_image, use_container_width=True)
 
     st.divider()
 
