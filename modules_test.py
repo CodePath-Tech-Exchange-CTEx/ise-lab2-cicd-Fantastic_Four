@@ -105,11 +105,36 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
 
 
 class TestDisplayRecentWorkouts(unittest.TestCase):
-    """Tests the display_recent_workouts function."""
+    def test_display_with_valid_data(self):
+        """Tests that the function handles a list of workout dictionaries."""
+        # Mock data representing what comes from data_fetcher.py
+        mock_workouts = [
+            {
+                'start_timestamp': '2026-02-20 08:30:00',
+                'distance': 3.5,
+                'steps': 4200,
+                'calories_burned': 210
+            },
+            {
+                'start_timestamp': '2026-02-21 17:00:00',
+                'distance': 1.2,
+                'steps': 1500,
+                'calories_burned': 85
+            }
+        ]
+        
+        # This checks if the function runs without raising an Exception
+        try:
+            display_recent_workouts(mock_workouts)
+        except Exception as e:
+            self.fail(f"display_recent_workouts raised {type(e).__name__} unexpectedly!") # Line written by Gemini
 
-    def test_foo(self):
-        """Tests foo."""
-        pass
+    def test_display_empty_list(self):
+        """Tests that the function handles an empty list without crashing."""
+        try:
+            display_recent_workouts([])
+        except Exception as e:
+            self.fail(f"display_recent_workouts crashed on empty list: {e}") # Line written by Gemini
 
 
 if __name__ == "__main__":
