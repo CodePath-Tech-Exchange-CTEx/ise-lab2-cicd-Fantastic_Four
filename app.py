@@ -25,7 +25,8 @@ def display_app_page():
     
     # Call your function to display it on the screen!
     display_activity_summary(user_workouts)
-
+    # function to display user workout
+    display_recent_workouts(user_workouts)
 
 # This is the starting point for your app. You do not need to change these lines
 if __name__ == '__main__':
