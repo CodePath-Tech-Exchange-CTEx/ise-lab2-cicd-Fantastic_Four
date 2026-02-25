@@ -108,10 +108,38 @@ class TestDisplayActivitySummary(unittest.TestCase):
 
 class TestDisplayGenAiAdvice(unittest.TestCase):
     """Tests the display_genai_advice function."""
+    @patch('streamlit.subheader')
+    @patch('streamlit.caption')
+    @patch('streamlit.write')
+    @patch('streamlit.image')
+    def test_display_genAI_advice(self,mock_image, mock_write, mock_caption, mock_subheader):
+        """Tests the function displayGEnAIAdvice with all the elements"""
+        timestamp= "2024-01-01 00:00:00"
+        content= "You are doing greta!!!"
+        image_url= "https://example.com?motivation.jpg"
 
-    def test_foo(self):
-        """Tests foo."""
-        pass
+        display_genai_advice(timestamp, content, image_url)
+
+        mock_subheader.assert_called_once_with("GenAI Advice")
+        mock_caption.assert_called_once_with(timestamp)
+        mock_write.assert_called_once_with(content)
+        mock_image.assert_called_once_with(image_url, width="stretch")
+
+    @patch('streamlit.subheader')
+    @patch('streamlit.caption')
+    @patch('streamlit.write')
+    @patch('streamlit.image')
+    def test_display_genAI_advice_no_image(self,mock_image, mock_write, mock_caption,mock_subheader):
+        """Tests the function displayGenAIAdvice with no image"""
+        display_genai_advice("2024-01-01","Example", None)
+
+        mock_subheader.assert_called_once_with("GenAI Advice")
+        mock_caption.assert_called_once_with("2024-01-01")
+        mock_write.assert_called_once_with("Example")
+        mock_image.assert_not_called()
+    
+
+
 
 
 class TestDisplayRecentWorkouts(unittest.TestCase):

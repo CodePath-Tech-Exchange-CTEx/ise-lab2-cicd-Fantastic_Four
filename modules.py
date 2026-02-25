@@ -103,6 +103,20 @@ def display_recent_workouts(workouts_list):
 
 
 
-def display_genai_advice(timestamp, content, image):
-    """Write a good docstring here."""
-    pass
+def display_genai_advice(timestamp, content, image): 
+    """display a motivation advice by genAi
+    Arguments:
+    timestamp a string with time
+    content a string with motivational phrase by genAI
+    image a url of a motivitional image
+    
+    """
+    st.subheader("GenAI Advice")
+    
+    with st.container(border=True): # Line written by Gemini
+        st.caption(timestamp) 
+        st.write(content) 
+    if image:
+        st.image(image, width="stretch")#line written by gemini
+
+    
