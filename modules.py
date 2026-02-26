@@ -54,35 +54,37 @@ def display_post(username, user_image, timestamp, content, post_image):
 
     with st.container(border=True):
 
-        # --- HEADER ROW ---
-        col1, col2, col3 = st.columns([1, 4, 2])
-        
-        with col1:
-            if user_image:
-                st.image(user_image, width=50)
-        with col2:
-            st.write(f"**{username}**")
-        with col3:
-            st.write(timestamp)
-        st.markdown("---")
+        # HEADER ROW
+        left, middle, right = st.columns([1, 4, 2])
 
-        # --- CAPTION ---
+        with left:
+            if user_image:
+                st.image(user_image, width=60)
+        with middle:
+            st.write(f"**{username}**")
+        with right:
+            st.write(timestamp)
+
+        st.divider()
+
+        # CAPTION
         st.write(content)
 
-        # --- IMAGE ---
+        # IMAGE
         if post_image:
             st.image(post_image, use_container_width=True)
 
-        # --- ACTION ROW ---
-        like_col, comment_col, spacer, save_col = st.columns([1,1,4,1])
-        with like_col:
-            st.write("⭐")
-        with comment_col:
-            st.write("💬")
-        with save_col:
-            st.write("🔖")
+        # ACTION ROW
+        like_col, comment_col, spacer, save_col = st.columns([1,1,6,1])
 
-    st.divider()
+        with like_col:
+            st.write("⭐ Like")
+        with comment_col:
+            st.write("💬 Comment")
+        with save_col:
+            st.write("🔖 Save")
+
+    st.write("")
 
 def display_activity_summary(workouts_list):
     # The Guard Clause - updated to use the correct variable name
