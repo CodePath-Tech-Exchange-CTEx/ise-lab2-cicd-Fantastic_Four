@@ -19,8 +19,7 @@ def display_app_page():
     # An example of displaying a custom component called "my_custom_component"
     value = st.text_input('Enter your name')
     display_my_custom_component(value)
-  
-    # user_posts = get_user_posts(userId)
+    
 
     # if user_posts:
     # for post in user_posts:
@@ -28,12 +27,16 @@ def display_app_page():
         
     # Fetch the workout data for the user
     user_workouts = get_user_workouts(userId)
-   
+
+    # Get user post data
+    user_posts = get_user_posts(userId)
+    st.write(user_posts)
     # - debug info. don't uncomment in final deployment
     # st.write("DEBUG WORKOUTS:", user_workouts)
     
     # Call your function to display it on the screen!
-    dispay_post(user_posts)
+    for post in user_posts:
+        display_post(post['username'], post['user_image'], post['timestamp'], post['content'], post['post_image'])
     display_activity_summary(user_workouts)
     # function to display user workout
     display_recent_workouts(user_workouts)
