@@ -28,7 +28,9 @@ def display_app_page():
         
     # Fetch the workout data for the user
     user_workouts = get_user_workouts(userId)
-    st.write("DEBUG WORKOUTS:", user_workouts)
+   
+    # - debug info. don't uncomment in final deployment
+    # st.write("DEBUG WORKOUTS:", user_workouts)
     
     # Call your function to display it on the screen!
     display_activity_summary(user_workouts)
@@ -36,7 +38,9 @@ def display_app_page():
     display_recent_workouts(user_workouts)
     #function to display the genAI advice
     GenAI_info= get_genai_advice(userId)
-    st.write("DEBUG GENAI:", GenAI_info)
+    
+    # - debug info. don't uncomment in final deployment
+    # st.write("DEBUG GENAI:", GenAI_info)
     
     display_genai_advice(GenAI_info['timestamp'], GenAI_info['content'], GenAI_info['image'])
 
