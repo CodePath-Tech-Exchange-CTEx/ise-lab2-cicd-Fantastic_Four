@@ -33,6 +33,7 @@ def display_app_page():
     # st.write("DEBUG WORKOUTS:", user_workouts)
     
     # Call your function to display it on the screen!
+    dispay_post(user_posts)
     display_activity_summary(user_workouts)
     # function to display user workout
     display_recent_workouts(user_workouts)
