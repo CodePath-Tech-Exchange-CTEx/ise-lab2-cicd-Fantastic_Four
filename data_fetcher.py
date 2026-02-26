@@ -107,20 +107,21 @@ def get_user_profile(user_id):
 
 
 def get_user_posts(user_id):
-    """Returns a list of a user's posts.
-
-    This function currently returns random data. You will re-write it in Unit 3.
-    """
+    """Returns a list of a user's posts."""
+    
     content = random.choice([
         'Had a great workout today!',
         'The AI really motivated me to push myself further, I ran 10 miles!',
     ])
+
+    user_profile = users[user_id]
+
     return [{
-        'user_id': user_id,
-        'post_id': 'post1',
+        'username': user_profile['username'],
+        'user_image': user_profile['profile_image'],
         'timestamp': '2024-01-01 00:00:00',
         'content': content,
-        'image': 'image_url',
+        'post_image': 'https://picsum.photos/600/400',
     }]
 
 
