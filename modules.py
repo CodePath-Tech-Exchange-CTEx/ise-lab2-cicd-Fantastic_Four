@@ -35,7 +35,8 @@ def display_post(username, user_image, timestamp, content, post_image):
     col1, col2 = st.columns([1, 5])
 
     with col1:
-        st.image(user_image, width=60)
+        if user_image:
+            st.image(user_image, width=60)
 
     with col2:
         st.write(f"**{username}**")
