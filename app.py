@@ -20,11 +20,11 @@ def display_app_page():
     value = st.text_input('Enter your name')
     display_my_custom_component(value)
   
-    user_posts = get_user_posts(userId)
+    # user_posts = get_user_posts(userId)
 
-    if user_posts:
-    for post in user_posts:
-        display_post(post['username'], post['user_image'], post['timestamp'], post['content'], post['post_image'])
+    # if user_posts:
+    # for post in user_posts:
+    #     display_post(post['username'], post['user_image'], post['timestamp'], post['content'], post['post_image'])
         
     # Fetch the workout data for the user
     user_workouts = get_user_workouts(userId)
