@@ -36,7 +36,7 @@ def display_app_page():
     
     # Call your function to display it on the screen!
     for post in user_posts:
-        display_post(post['user_id'], None, post['timestamp'], post['content'], post['image'])
+        display_post(post['username'], post['user_image'], post['timestamp'], post['content'], post['post_image'])
     display_activity_summary(user_workouts)
     # function to display user workout
     display_recent_workouts(user_workouts)
