@@ -39,7 +39,7 @@ class TestDisplayPost(unittest.TestCase):
         content = "This is a test post."
         post_image = "post.png"
 
-        display_post(username, user_image, timestamp, content, post_image)
+        display_post(username, user_image, timestamp, content, post_image) # - line written by ChatGPT
 
         mock_columns.assert_called_once()
         mock_caption.assert_called_with(timestamp)
