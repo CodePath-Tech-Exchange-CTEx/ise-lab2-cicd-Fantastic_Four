@@ -29,26 +29,60 @@ def display_my_custom_component(value):
     create_component(data, html_file_name)
 
 
+# def display_post(username, user_image, timestamp, content, post_image):
+#     """Displays a formatted social media post."""
+
+#     col1, col2 = st.columns([1, 5])
+
+#     with col1:
+#         if user_image:
+#             st.image(user_image, width=60)
+
+#     with col2:
+#         st.write(f"**{username}**")
+#         st.caption(timestamp)
+
+#     st.write(content)
+
+#     if post_image and post_image != "image_url":
+#         st.image(post_image, use_container_width=True)
+
+#     st.divider()
+
 def display_post(username, user_image, timestamp, content, post_image):
     """Displays a formatted social media post."""
 
-    col1, col2 = st.columns([1, 5])
+    with st.container(border=True):
 
-    with col1:
-        if user_image:
-            st.image(user_image, width=60)
+        # --- HEADER ROW ---
+        col1, col2, col3 = st.columns([1, 4, 2])
+        
+        with col1:
+            if user_image:
+                st.image(user_image, width=50)
+        with col2:
+            st.write(f"**{username}**")
+        with col3:
+            st.write(timestamp)
+        st.markdown("---")
 
-    with col2:
-        st.write(f"**{username}**")
-        st.caption(timestamp)
+        # --- CAPTION ---
+        st.write(content)
 
-    st.write(content)
+        # --- IMAGE ---
+        if post_image:
+            st.image(post_image, use_container_width=True)
 
-    if post_image and post_image != "image_url":
-        st.image(post_image, use_container_width=True)
+        # --- ACTION ROW ---
+        like_col, comment_col, spacer, save_col = st.columns([1,1,4,1])
+        with like_col:
+            st.write("⭐")
+        with comment_col:
+            st.write("💬")
+        with save_col:
+            st.write("🔖")
 
     st.divider()
-
 
 def display_activity_summary(workouts_list):
     # The Guard Clause - updated to use the correct variable name
