@@ -15,11 +15,17 @@ userId = 'user1'
 def display_app_page():
     """Displays the home page of the app."""
     st.title('Welcome to SDS! test')
-
+    
     # An example of displaying a custom component called "my_custom_component"
     value = st.text_input('Enter your name')
     display_my_custom_component(value)
+  
+    user_posts = get_user_posts(userId)
 
+    if user_posts:
+    for post in user_posts:
+        display_post(post['username'], post['user_image'], post['timestamp'], post['content'], post['post_image'])
+        
     # Fetch the workout data for the user
     user_workouts = get_user_workouts(userId)
     st.write("DEBUG WORKOUTS:", user_workouts)
