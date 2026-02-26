@@ -21,13 +21,13 @@ def display_app_page():
     display_my_custom_component(value)
 
     # get user posts
-    user_posts = get_user_posts(userId)
-    
+  user_posts = get_user_posts(userId)
+
     st.subheader("Recent Posts")
     
     if user_posts:
         for post in user_posts:
-            display_post(post['username'], post['user_image'], post['timestamp'], post['content'], post['post_image'])
+            display_post(post['user_profile']['username'], post['user_profile']['profile_image'], post['timestamp'], post['content'], post['post_image'])
     else:
         st.write("No posts available.")
 
