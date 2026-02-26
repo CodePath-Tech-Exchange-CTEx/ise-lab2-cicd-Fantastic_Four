@@ -27,7 +27,7 @@ def display_app_page():
     
     if user_posts:
         for post in user_posts:
-            display_post(post['user_profile']['username'], post['user_profile']['profile_image'], post['timestamp'], post['content'], post['post_image'])
+            display_post(post['user_profile']['value'], post['user_profile']['profile_image'], post['timestamp'], post['content'], post['post_image'])
     else:
         st.write("No posts available.")
 
