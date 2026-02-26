@@ -44,7 +44,7 @@ def display_post(username, user_image, timestamp, content, post_image):
 
     st.write(content)
 
-    if post_image is not None:
+    if post_image and post_image != "image_url":
         st.image(post_image, use_container_width=True)
 
     st.divider()
