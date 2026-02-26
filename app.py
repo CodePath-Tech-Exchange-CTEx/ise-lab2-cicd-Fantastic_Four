@@ -30,7 +30,10 @@ def display_app_page():
 
     # Get user post data
     user_posts = get_user_posts(userId)
-    st.write(user_posts)
+    
+    # - debug info. don't uncomment in final deployment
+    #st.write(user_posts)
+    
     # - debug info. don't uncomment in final deployment
     # st.write("DEBUG WORKOUTS:", user_workouts)
     
