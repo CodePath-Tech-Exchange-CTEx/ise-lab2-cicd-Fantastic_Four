@@ -54,35 +54,48 @@ def display_post(username, user_image, timestamp, content, post_image):
 
     with st.container(border=True):
 
-        # HEADER ROW
-        left, middle, right = st.columns([1, 4, 2])
+        # Header
+        col_img, col_text = st.columns([1, 9])
 
-        with left:
+        with col_img:
             if user_image:
-                st.image(user_image, width=60)
-        with middle:
-            st.write(f"**{username}**")
-        with right:
-            st.write(timestamp)
+                st.image(user_image, width=55)
+
+        with col_text:
+            name_col, time_col = st.columns([6, 4])
+
+            with name_col:
+                st.markdown(f"**{username}**")
+
+            with time_col:
+                st.markdown(
+                    f"<div style='text-align:right'>{timestamp}</div>",
+                    unsafe_allow_html=True
+                )
 
         st.divider()
 
-        # CAPTION
+        # Caption
         st.write(content)
 
-        # IMAGE
+        # Post image
         if post_image:
             st.image(post_image, use_container_width=True)
 
-        # ACTION ROW
-        like_col, comment_col, spacer, save_col = st.columns([1,1,6,1])
+        # Actions row
+        like_col, comment_col, spacer, save_col = st.columns([1, 1, 6, 1])
 
         with like_col:
-            st.write("⭐ Like")
+            st.markdown("⭐")
+
         with comment_col:
-            st.write("💬 Comment")
+            st.markdown("💬")
+
         with save_col:
-            st.write("🔖 Save")
+            st.markdown(
+                "<div style='text-align:right'>🔖</div>",
+                unsafe_allow_html=True
+            )
 
     st.write("")
 
