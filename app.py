@@ -17,7 +17,7 @@ def display_app_page():
     st.title('Welcome to SDS!')
     
     # An example of displaying a custom component called "my_custom_component"
-    value = st.text_input('Enter your name')
+    value = st.text_input('Enter your name:')
     display_my_custom_component(value)
     
 
