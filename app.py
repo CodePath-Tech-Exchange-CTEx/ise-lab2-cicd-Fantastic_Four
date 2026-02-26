@@ -20,6 +20,17 @@ def display_app_page():
     value = st.text_input('Enter your name')
     display_my_custom_component(value)
 
+    # get user posts
+    user_posts = get_user_posts(userId)
+    
+    st.subheader("Recent Posts")
+    
+    if user_posts:
+        for post in user_posts:
+            display_post(post['username'], post['user_image'], post['timestamp'], post['content'], post['post_image'])
+    else:
+        st.write("No posts available.")
+
     # Fetch the workout data for the user
     user_workouts = get_user_workouts(userId)
     
