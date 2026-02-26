@@ -14,7 +14,7 @@ userId = 'user1'
 
 def display_app_page():
     """Displays the home page of the app."""
-    st.title('Welcome to SDS!')
+    st.title('Welcome to SDS! [test]')
 
     # An example of displaying a custom component called "my_custom_component"
     value = st.text_input('Enter your name')
@@ -22,6 +22,7 @@ def display_app_page():
 
     # Fetch the workout data for the user
     user_workouts = get_user_workouts(userId)
+    st.write("DEBUG WORKOUTS:", user_workouts)
     
     # Call your function to display it on the screen!
     display_activity_summary(user_workouts)
@@ -29,6 +30,8 @@ def display_app_page():
     display_recent_workouts(user_workouts)
     #function to display the genAI advice
     GenAI_info= get_genai_advice(userId)
+    st.write("DEBUG GENAI:", GenAI_info)
+    
     display_genai_advice(GenAI_info['timestamp'], GenAI_info['content'], GenAI_info['image'])
 
 # This is the starting point for your app. You do not need to change these lines
