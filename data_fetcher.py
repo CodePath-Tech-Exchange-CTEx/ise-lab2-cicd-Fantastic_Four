@@ -117,10 +117,12 @@ def get_user_posts(user_id):
     ])
     return [{
         'user_id': user_id,
+        'username': 'remi_the_rems',  # Added key
+        'user_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',  # Added key
         'post_id': 'post1',
         'timestamp': '2024-01-01 00:00:00',
         'content': content,
-        'image': 'image_url',
+        'post_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',  # Renamed from 'image'
     }]
 
 
