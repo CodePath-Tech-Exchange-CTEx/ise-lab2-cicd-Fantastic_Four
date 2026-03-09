@@ -9,6 +9,7 @@
 #############################################################################
 
 import random
+from google.cloud import bigquery #connection with bigquery
 
 users = {
     'user1': {
@@ -95,6 +96,28 @@ def get_user_workouts(user_id):
         })
     return workouts
 
+# tamplete to get the user info from the database
+"""
+def get_user_profile(user_id):
+    # 1. Create a "messenger" client
+    client = bigquery.Client()
+    
+    # 2. Write your SQL query as a string
+    query = "SELECT * FROM COURSE_CODE.Users WHERE UserId = 'user1'"
+    
+    # 3. Send the query to BigQuery and wait for the job to finish
+    query_job = client.query(query)
+    
+    # 4. Get the results back (this returns an iterator of rows)
+    results = query_job.result()
+    
+    # 5. Loop through the results to get your data
+    for row in results:
+        print(row.Name)
+        print(row.Username)
+        
+    # (Then you would format this data into the dictionary your instructions require!)
+"""
 
 def get_user_profile(user_id):
     """Returns information about the given user.
