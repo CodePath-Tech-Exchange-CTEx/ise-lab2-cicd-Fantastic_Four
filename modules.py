@@ -29,25 +29,75 @@ def display_my_custom_component(value):
     create_component(data, html_file_name)
 
 
+# def display_post(username, user_image, timestamp, content, post_image):
+#     """Displays a formatted social media post."""
+
+#     col1, col2 = st.columns([1, 5])
+
+#     with col1:
+#         if user_image:
+#             st.image(user_image, width=60)
+
+#     with col2:
+#         st.write(f"**{username}**")
+#         st.caption(timestamp)
+
+#     st.write(content)
+
+#     if post_image and post_image != "image_url":
+#         st.image(post_image, use_container_width=True)
+
+#     st.divider()
+
 def display_post(username, user_image, timestamp, content, post_image):
     """Displays a formatted social media post."""
 
-    col1, col2 = st.columns([1, 5])
+    with st.container(border=True):
 
-    with col1:
-        st.image(user_image, width=60)
+        # Header
+        col_img, col_text = st.columns([1, 9])
 
-    with col2:
-        st.write(f"**{username}**")
-        st.caption(timestamp)
+        with col_img:
+            if user_image:
+                st.image(user_image, width=55)
 
-    st.write(content)
+        with col_text:
+            name_col, time_col = st.columns([6, 4])
 
-    if post_image is not None:
-        st.image(post_image, use_container_width=True)
+            with name_col:
+                st.markdown(f"**{username}**")
 
-    st.divider()
+            with time_col:
+                st.markdown(
+                    f"<div style='text-align:right'>{timestamp}</div>",
+                    unsafe_allow_html=True
+                )
 
+        st.divider()
+
+        # Caption
+        st.write(content)
+
+        # Post image
+        if post_image:
+            st.image(post_image, use_container_width=True)
+
+        # Actions row
+        like_col, comment_col, spacer, save_col = st.columns([1, 1, 6, 1])
+
+        with like_col:
+            st.markdown("⭐")
+
+        with comment_col:
+            st.markdown("💬")
+
+        with save_col:
+            st.markdown(
+                "<div style='text-align:right'>🔖</div>",
+                unsafe_allow_html=True
+            )
+
+    st.write("")
 
 def display_activity_summary(workouts_list):
     # The Guard Clause - updated to use the correct variable name
