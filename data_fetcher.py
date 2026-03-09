@@ -96,29 +96,42 @@ def get_user_workouts(user_id):
         })
     return workouts
 
-# tamplete to get the user info from the database
+# new get_user_profile function
 """
 def get_user_profile(user_id):
-    # 1. Create a "messenger" client
+    # Create a "messenger" client
     client = bigquery.Client()
     
-    # 2. Write your SQL query as a string
-    query = "SELECT * FROM COURSE_CODE.Users WHERE UserId = 'user1'"
+    # SQL querys as a string
+    query_for_users = f"SELECT * FROM kevin-beltran-pena-uprm.ise.Users WHERE UserId = '{user_id}'"
+    query_for_friends = f"SELECT UserId2 FROM kevin-beltran-pena-uprm.ise.Friends WHERE UserId1 = '{user_id}'"
     
-    # 3. Send the query to BigQuery and wait for the job to finish
-    query_job = client.query(query)
+    # Send the query to BigQuery and wait for the job to finish
+    query_job_users = client.query(query_for_users)
+    query_job_friends = client.query(query_for_friends)
     
-    # 4. Get the results back (this returns an iterator of rows)
-    results = query_job.result()
     
-    # 5. Loop through the results to get your data
-    for row in results:
-        print(row.Name)
-        print(row.Username)
+    # Get the results back (this returns an iterator of rows)
+    user_results = query_job_users.result()
+
+    users_disctionary = {}
+    for row in user_results:
+        users_disctionary["full_name"] = row.full_name
+        users_disctionary["username"] = row.username
+        users_disctionary["date_of_birth"] = row.DateOfBirth
+        users_disctionary["profile_image"] = row.ImageUrl
+        users_disctionary["friends"] = []
         
-    # (Then you would format this data into the dictionary your instructions require!)
+        for row in query_job_friends.result():
+            users_disctionary["friends"].append(row.UserId2)
+    
+    
+    # return the dictionary
+    return users_disctionary
 """
 
+# old function to be delated
+# v v v v v v v v v v v v v  
 def get_user_profile(user_id):
     """Returns information about the given user.
 
