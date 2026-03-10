@@ -9,7 +9,8 @@
 #############################################################################
 
 import random
-from google.cloud import bigquery #connection with bigquery
+# connection with bigquery (had to run: pip install google-cloud-bigquery)
+from google.cloud import bigquery 
 
 users = {
     'user1': {
@@ -97,7 +98,7 @@ def get_user_workouts(user_id):
     return workouts
 
 # new get_user_profile function
-"""
+
 def get_user_profile(user_id):
     # Create a "messenger" client
     client = bigquery.Client()
@@ -116,30 +117,33 @@ def get_user_profile(user_id):
 
     users_disctionary = {}
     for row in user_results:
-        users_disctionary["full_name"] = row.full_name
-        users_disctionary["username"] = row.username
+        users_disctionary["full_name"] = row.Name
+        users_disctionary["username"] = row.Username
         users_disctionary["date_of_birth"] = row.DateOfBirth
         users_disctionary["profile_image"] = row.ImageUrl
         users_disctionary["friends"] = []
         
-        for row in query_job_friends.result():
-            users_disctionary["friends"].append(row.UserId2)
+        for friend_row in query_job_friends.result():
+            users_disctionary["friends"].append(friend_row.UserId2)
     
     
     # return the dictionary
     return users_disctionary
-"""
+
 
 # old function to be delated
-# v v v v v v v v v v v v v  
+# v v v v v v v v v v v v v 
+"""
 def get_user_profile(user_id):
-    """Returns information about the given user.
+    #Returns information about the given user.
 
-    This function currently returns random data. You will re-write it in Unit 3.
-    """
+    #This function currently returns random data. You will re-write it in Unit 3.
+    
     if user_id not in users:
         raise ValueError(f'User {user_id} not found.')
     return users[user_id]
+"""
+# ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ 
 
 
 def get_user_posts(user_id):
