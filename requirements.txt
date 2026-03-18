@@ -1,1 +1,4 @@
 streamlit
+google-cloud-bigquery
+
+"protobuf<6"
