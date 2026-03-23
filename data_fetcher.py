@@ -43,12 +43,44 @@ users = {
     },
 }
 
+# new get_user_sensor_data() function
 
 def get_user_sensor_data(user_id, workout_id):
     """Returns a list of timestampped information for a given workout.
 
     This function currently returns random data. You will re-write it in Unit 3.
     """
+
+    client = bigquery.Client()
+    
+    # 1. The SQL Query
+    query = f"SELECT * FROM kevin-beltran-pena-uprm.ise.SensorData  WHERE UserId = '{user_id}' AND WorkoutID = '{workout_id}'"
+    
+    # 2. Run the Query
+    query_job = client.query(query)
+    sensorData_results = query_job.result()
+    
+    # 3. Create the empty list
+    sensorData_list = []
+    
+    # 4. Loop through the results using your exact code
+    for row in sensorData_results:
+        sensorData = {}
+        sensorData["SensorId"] = row.SensorId
+        sensorData["WorkoutID"] = row.WorkoutID
+        sensorData["Timestamp"] = row.Timestamp
+        sensorData["SensorValue"] = row.SensorValue
+        
+        sensorData_list.append(workouts)
+        
+    # 5. Return the final list of dictionaries!
+    return sensorData_list
+
+# old get_user_sensor_data() function
+# V V V V V V V V V V V V V V V V V
+"""
+def get_user_sensor_data(user_id, workout_id):
+    
     sensor_data = []
     sensor_types = [
         'accelerometer',
@@ -68,9 +100,8 @@ def get_user_sensor_data(user_id, workout_id):
             {'sensor_type': sensor_type, 'timestamp': timestamp, 'data': data}
         )
     return sensor_data
-
+"""
 # new get_user_workouts function
-
 
 def get_user_workouts(user_id):
     """Returns a list of user's workouts.
@@ -92,9 +123,9 @@ def get_user_workouts(user_id):
     # 4. Loop through the results using your exact code
     for row in workout_results:
         workouts = {}
-        workouts["workout_id"] = row.WorkoutId
-        workouts["distance"] = row.Distance
-        # also add steps, calories, start_timestamp, etc.
+        workouts["WorkoutId"] = row.WorkoutId
+        workouts["TotalDistance"] = row.TotalDistance
+        # ADD MORE DATA
         
         workouts_list.append(workouts)
         
