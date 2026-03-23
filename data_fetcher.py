@@ -8,9 +8,14 @@
 # testing earlier units.
 #############################################################################
 
+import datetime
 import random
 # connection with bigquery (had to run: pip install google-cloud-bigquery)
 from google.cloud import bigquery 
+
+# imports for VertexAI
+import vertexai
+from vertexai.generative_models import GenerativeModel
 
 users = {
     'user1': {
@@ -213,6 +218,36 @@ def get_user_profile(user_id):
 # ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ 
 
 
+# new get_user_posts function
+"""
+def get_user_posts(user_id):
+    client = bigquery.Client()
+    
+    # 1. The SQL Query
+    query = f"SELECT * FROM kevin-beltran-pena-uprm.ISE.Posts WHERE UserId = '{user_id}'"
+    
+    # 2. Run the Query
+    query_job = client.query(query)
+    posts = query_job.result()
+    
+    # 3. Create the empty list
+    posts_list = []
+    
+    # 4. Loop through the results using your exact code
+    for row in posts:
+        posts = {}
+        
+        
+        workouts_list.append(workouts)
+        
+    # 5. Return the final list of dictionaries!
+    return posts
+
+
+"""
+
+# old function to be delated
+# v v v v v v v v v v v v v 
 def get_user_posts(user_id):
     """Returns a list of a user's posts."""
     
@@ -232,6 +267,37 @@ def get_user_posts(user_id):
     }]
 
 
+# new get_genai_advice function
+"""
+
+def get_genai_advice(user_id):
+    # 1. Initialize the connection to your project
+    # Note: 'us-central1' is the standard location for Vertex AI
+    vertexai.init(project="kevin-beltran-pena-uprm", location="us-central1")
+    
+    # 2. Pick the brain you want to use (Gemini Flash is fast and great for this)
+    model = GenerativeModel("gemini-1.5-flash-001")
+    
+    # 3. Give the AI instructions (the "prompt")
+    prompt = "Write a 1-sentence motivational fitness message for someone tracking their workouts."
+    
+    # 4. Ask the AI to generate the response
+    ai_response = model.generate_content(prompt)
+    
+    # 5. Extract just the text from the response
+    generated_text = ai_response.text
+    
+    # 6. Build the dictionary that modules.py expects
+    return {
+        'advice_id': 'ai_advice_1',
+        'timestamp': str(datetime.datetime.now()), # Stamps it with the current time
+        'content': generated_text,
+        'image': None # We can leave the image blank for now!
+    }
+"""
+
+# old function to be delated
+# v v v v v v v v v v v v v 
 def get_genai_advice(user_id):
     """Returns the most recent advice from the genai model.
 
