@@ -69,12 +69,44 @@ def get_user_sensor_data(user_id, workout_id):
         )
     return sensor_data
 
+# new get_user_workouts function
+
 
 def get_user_workouts(user_id):
     """Returns a list of user's workouts.
 
     This function currently returns random data. You will re-write it in Unit 3.
     """
+    client = bigquery.Client()
+    
+    # 1. The SQL Query
+    query = f"SELECT * FROM kevin-beltran-pena-uprm.ise.Workouts WHERE UserId = '{user_id}'"
+    
+    # 2. Run the Query
+    query_job = client.query(query)
+    workout_results = query_job.result()
+    
+    # 3. Create the empty list
+    workouts_list = []
+    
+    # 4. Loop through the results using your exact code
+    for row in workout_results:
+        workouts = {}
+        workouts["workout_id"] = row.WorkoutId
+        workouts["distance"] = row.Distance
+        # also add steps, calories, start_timestamp, etc.
+        
+        workouts_list.append(workouts)
+        
+    # 5. Return the final list of dictionaries!
+    return workouts_list
+
+
+# old get_user_workouts function
+# V V V V V V V V V V V V V V V
+"""
+def get_user_workouts(user_id):
+    
     workouts = []
     for index in range(random.randint(1, 3)):
         random_lat_lng_1 = (
@@ -96,6 +128,7 @@ def get_user_workouts(user_id):
             'calories_burned': random.randint(0, 100),
         })
     return workouts
+"""
 
 # new get_user_profile function
 
