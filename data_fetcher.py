@@ -219,29 +219,41 @@ def get_user_profile(user_id):
 
 
 # new get_user_posts function
-"""
+
 def get_user_posts(user_id):
+    
     client = bigquery.Client()
     
-    # 1. The SQL Query
-    query = f"SELECT * FROM kevin-beltran-pena-uprm.ISE.Posts WHERE UserId = '{user_id}'"
+    # 1. The Fixed SQL Query (Using AuthorId)
+    query = f"SELECT * FROM kevin-beltran-pena-uprm.ISE.Posts WHERE AuthorId = '{user_id}'"
     
     # 2. Run the Query
     query_job = client.query(query)
-    posts = query_job.result()
+    posts_results = query_job.result()
     
-    # 3. Create the empty list
+    # 3. NEW STEP: Grab the user's profile so we have their username and picture!
+    user_profile = get_user_profile(user_id)
+    
+    # 4. Create the empty list
     posts_list = []
     
-    # 4. Loop through the results using your exact code
-    for row in posts:
-        posts = {}
+    # 5. Loop through the results
+    for row in posts_results:
+        post = {}
         
+        # Pulling the missing info from the profile we just grabbed:
+        post["username"] = user_profile["username"] 
+        post["user_image"] = user_profile["profile_image"] 
         
-        workouts_list.append(workouts)
+        # Pulling the rest of the info from the BigQuery row:
+        post["timestamp"] = row.Timestamp
+        post["content"] = row.Content
+        post["post_image"] = row.ImageUrl # Your table calls it ImageUrl!
         
-    # 5. Return the final list of dictionaries!
-    return posts
+        posts_list.append(post)
+        
+    # 6. Return the final list of dictionaries!
+    return posts_list
 
 
 """
@@ -249,7 +261,6 @@ def get_user_posts(user_id):
 # old function to be delated
 # v v v v v v v v v v v v v 
 def get_user_posts(user_id):
-    """Returns a list of a user's posts."""
     
     content = random.choice([
         'Had a great workout today!',
@@ -266,7 +277,7 @@ def get_user_posts(user_id):
         'post_image': 'https://picsum.photos/600/400',
     }]
 
-
+"""
 
 
 # new get_genai_advice function
