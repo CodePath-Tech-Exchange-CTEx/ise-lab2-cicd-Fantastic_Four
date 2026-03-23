@@ -54,7 +54,7 @@ def get_user_sensor_data(user_id, workout_id):
     client = bigquery.Client()
     
     # 1. The SQL Query
-    query = f"SELECT * FROM kevin-beltran-pena-uprm.ise.SensorData  WHERE UserId = '{user_id}' AND WorkoutID = '{workout_id}'"
+    query = f"SELECT * FROM kevin-beltran-pena-uprm.ISE.SensorData  WHERE UserId = '{user_id}' AND WorkoutID = '{workout_id}'"
     
     # 2. Run the Query
     query_job = client.query(query)
@@ -71,8 +71,8 @@ def get_user_sensor_data(user_id, workout_id):
         sensorData["Timestamp"] = row.Timestamp
         sensorData["SensorValue"] = row.SensorValue
         
-        sensorData_list.append(workouts)
-        
+        sensorData_list.append(sensorData)
+
     # 5. Return the final list of dictionaries!
     return sensorData_list
 
@@ -111,7 +111,7 @@ def get_user_workouts(user_id):
     client = bigquery.Client()
     
     # 1. The SQL Query
-    query = f"SELECT * FROM kevin-beltran-pena-uprm.ise.Workouts WHERE UserId = '{user_id}'"
+    query = f"SELECT * FROM kevin-beltran-pena-uprm.ISE.Workouts WHERE UserId = '{user_id}'"
     
     # 2. Run the Query
     query_job = client.query(query)
@@ -123,8 +123,11 @@ def get_user_workouts(user_id):
     # 4. Loop through the results using your exact code
     for row in workout_results:
         workouts = {}
-        workouts["WorkoutId"] = row.WorkoutId
-        workouts["TotalDistance"] = row.TotalDistance
+        workouts["workout_id"] = row.WorkoutId
+        workouts["start_timestamp"] = row.StartTimestamp
+        workouts["distance"] = row.TotalDistance
+        workouts["steps"] = row.TotalSteps
+        workouts["calories_burned"] = row.CaloriesBurned
         # ADD MORE DATA
         
         workouts_list.append(workouts)
@@ -168,8 +171,8 @@ def get_user_profile(user_id):
     client = bigquery.Client()
     
     # SQL querys as a string
-    query_for_users = f"SELECT * FROM kevin-beltran-pena-uprm.ise.Users WHERE UserId = '{user_id}'"
-    query_for_friends = f"SELECT UserId2 FROM kevin-beltran-pena-uprm.ise.Friends WHERE UserId1 = '{user_id}'"
+    query_for_users = f"SELECT * FROM kevin-beltran-pena-uprm.ISE.Users WHERE UserId = '{user_id}'"
+    query_for_friends = f"SELECT UserId2 FROM kevin-beltran-pena-uprm.ISE.Friends WHERE UserId1 = '{user_id}'"
     
     # Send the query to BigQuery and wait for the job to finish
     query_job_users = client.query(query_for_users)
