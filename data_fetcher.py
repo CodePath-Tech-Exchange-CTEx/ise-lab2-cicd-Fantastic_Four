@@ -267,16 +267,17 @@ def get_user_posts(user_id):
     }]
 
 
-# new get_genai_advice function
-"""
 
+
+# new get_genai_advice function
 def get_genai_advice(user_id):
+
     # 1. Initialize the connection to your project
     # Note: 'us-central1' is the standard location for Vertex AI
     vertexai.init(project="kevin-beltran-pena-uprm", location="us-central1")
     
     # 2. Pick the brain you want to use (Gemini Flash is fast and great for this)
-    model = GenerativeModel("gemini-1.5-flash-001")
+    model = GenerativeModel("gemini-2.5-flash-lite")
     
     # 3. Give the AI instructions (the "prompt")
     prompt = "Write a 1-sentence motivational fitness message for someone tracking their workouts."
@@ -294,15 +295,13 @@ def get_genai_advice(user_id):
         'content': generated_text,
         'image': None # We can leave the image blank for now!
     }
-"""
 
+
+"""
 # old function to be delated
 # v v v v v v v v v v v v v 
 def get_genai_advice(user_id):
-    """Returns the most recent advice from the genai model.
-
-    This function currently returns random data. You will re-write it in Unit 3.
-    """
+    
     advice = random.choice([
         'Your heart rate indicates you can push yourself further. You got this!',
         "You're doing great! Keep up the good work.",
@@ -319,3 +318,4 @@ def get_genai_advice(user_id):
         'content': advice,
         'image': image,
     }
+"""
