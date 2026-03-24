@@ -17,6 +17,9 @@ from google.cloud import bigquery
 import vertexai
 from vertexai.generative_models import GenerativeModel
 
+# needed to generate random ID
+import uuid 
+
 users = {
     'user1': {
         'full_name': 'Remi',
@@ -47,6 +50,9 @@ users = {
         'friends': ['user1', 'user3'],
     },
 }
+
+
+# functions to read data
 
 #----------------------------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------------------
@@ -217,3 +223,30 @@ def get_genai_advice(user_id):
         'content': generated_text,
         'image': None # We can leave the image blank for now!
     }
+
+#----------------------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------------------
+
+# functions to write data
+
+#----------------------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------------------
+
+# CREATE A UNIT TEST FOR THIS FUNCTION
+def create_shared_post(user_id, content):
+    """Inserts a new post into the BigQuery Posts table."""
+    client = bigquery.Client()
+    
+    # Generate a random unique ID for the post and get the current time
+    post_id = str(uuid.uuid4())
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # 1. The SQL INSERT Query
+    query = f"""
+        INSERT INTO kevin-beltran-pena-uprm.ISE.Posts (PostId, AuthorId, Timestamp, ImageUrl, Content)
+        VALUES ('{post_id}', '{user_id}', '{current_time}', NULL, '{content}')
+    """
+    
+    # 2. Run the Query to save it to the database!
+    query_job = client.query(query)
+    query_job.result() # Wait for it to finish
