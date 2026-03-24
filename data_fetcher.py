@@ -48,7 +48,8 @@ users = {
     },
 }
 
-# new get_user_sensor_data() function
+#----------------------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------------------
 
 def get_user_sensor_data(user_id, workout_id):
     """Returns a list of timestampped information for a given workout.
@@ -81,32 +82,8 @@ def get_user_sensor_data(user_id, workout_id):
     # 5. Return the final list of dictionaries!
     return sensorData_list
 
-# old get_user_sensor_data() function
-# V V V V V V V V V V V V V V V V V
-"""
-def get_user_sensor_data(user_id, workout_id):
-    
-    sensor_data = []
-    sensor_types = [
-        'accelerometer',
-        'gyroscope',
-        'pressure',
-        'temperature',
-        'heart_rate',
-    ]
-    for index in range(random.randint(5, 100)):
-        random_minute = str(random.randint(0, 59))
-        if len(random_minute) == 1:
-            random_minute = '0' + random_minute
-        timestamp = '2024-01-01 00:' + random_minute + ':00'
-        data = random.random() * 100
-        sensor_type = random.choice(sensor_types)
-        sensor_data.append(
-            {'sensor_type': sensor_type, 'timestamp': timestamp, 'data': data}
-        )
-    return sensor_data
-"""
-# new get_user_workouts function
+#----------------------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------------------
 
 def get_user_workouts(user_id):
     """Returns a list of user's workouts.
@@ -140,36 +117,8 @@ def get_user_workouts(user_id):
     # 5. Return the final list of dictionaries!
     return workouts_list
 
-
-# old get_user_workouts function
-# V V V V V V V V V V V V V V V
-"""
-def get_user_workouts(user_id):
-    
-    workouts = []
-    for index in range(random.randint(1, 3)):
-        random_lat_lng_1 = (
-            1 + random.randint(0, 100) / 100,
-            4 + random.randint(0, 100) / 100,
-        )
-        random_lat_lng_2 = (
-            1 + random.randint(0, 100) / 100,
-            4 + random.randint(0, 100) / 100,
-        )
-        workouts.append({
-            'workout_id': f'workout{index}',
-            'start_timestamp': '2024-01-01 00:00:00',
-            'end_timestamp': '2024-01-01 00:30:00',
-            'start_lat_lng': random_lat_lng_1,
-            'end_lat_lng': random_lat_lng_2,
-            'distance': random.randint(0, 200) / 10.0,
-            'steps': random.randint(0, 20000),
-            'calories_burned': random.randint(0, 100),
-        })
-    return workouts
-"""
-
-# new get_user_profile function
+#----------------------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------------------
 
 def get_user_profile(user_id):
     # Create a "messenger" client
@@ -202,23 +151,8 @@ def get_user_profile(user_id):
     # return the dictionary
     return users_disctionary
 
-
-# old function to be delated
-# v v v v v v v v v v v v v 
-"""
-def get_user_profile(user_id):
-    #Returns information about the given user.
-
-    #This function currently returns random data. You will re-write it in Unit 3.
-    
-    if user_id not in users:
-        raise ValueError(f'User {user_id} not found.')
-    return users[user_id]
-"""
-# ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ 
-
-
-# new get_user_posts function
+#----------------------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------------------
 
 def get_user_posts(user_id):
     
@@ -255,32 +189,9 @@ def get_user_posts(user_id):
     # 6. Return the final list of dictionaries!
     return posts_list
 
+#----------------------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------------------
 
-"""
-
-# old function to be delated
-# v v v v v v v v v v v v v 
-def get_user_posts(user_id):
-    
-    content = random.choice([
-        'Had a great workout today!',
-        'The AI really motivated me to push myself further, I ran 10 miles!',
-    ])
-
-    user_profile = users[user_id]
-
-    return [{
-        'username': user_profile['username'],
-        'user_image': user_profile['profile_image'],
-        'timestamp': '2024-01-01 00:00:00',
-        'content': content,
-        'post_image': 'https://picsum.photos/600/400',
-    }]
-
-"""
-
-
-# new get_genai_advice function
 def get_genai_advice(user_id):
 
     # 1. Initialize the connection to your project
@@ -306,27 +217,3 @@ def get_genai_advice(user_id):
         'content': generated_text,
         'image': None # We can leave the image blank for now!
     }
-
-
-"""
-# old function to be delated
-# v v v v v v v v v v v v v 
-def get_genai_advice(user_id):
-    
-    advice = random.choice([
-        'Your heart rate indicates you can push yourself further. You got this!',
-        "You're doing great! Keep up the good work.",
-        'You worked hard yesterday, take it easy today.',
-        'You have burned 100 calories so far today!',
-    ])
-    image = random.choice([
-        'https://plus.unsplash.com/premium_photo-1669048780129-051d670fa2d1?q=80&w=3870&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-        None,
-    ])
-    return {
-        'advice_id': 'advice1',
-        'timestamp': '2024-01-01 00:00:00',
-        'content': advice,
-        'image': image,
-    }
-"""
