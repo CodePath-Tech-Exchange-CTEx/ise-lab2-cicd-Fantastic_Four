@@ -9,6 +9,8 @@ import streamlit as st
 from modules import display_my_custom_component, display_post, display_genai_advice, display_activity_summary, display_recent_workouts
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
 
+from community_page import show_community_page
+
 userId = 'user1'
 
 
@@ -51,6 +53,14 @@ def display_app_page():
     
     display_genai_advice(GenAI_info['timestamp'], GenAI_info['content'], GenAI_info['image'])
 
-# This is the starting point for your app. You do not need to change these lines
+
 if __name__ == '__main__':
-    display_app_page()
+    # 1. Create a menu in the sidebar
+    st.sidebar.title("Navigation")
+    page_selection = st.sidebar.radio("Go to:", ["Home", "Community Feed"])
+    
+    # 2. Route the app based on what the user clicks
+    if page_selection == "Home":
+        display_app_page() # Shows your original app.py stuff
+    elif page_selection == "Community Feed":
+        show_community_page(userId) # Shows your brand new community feed!
