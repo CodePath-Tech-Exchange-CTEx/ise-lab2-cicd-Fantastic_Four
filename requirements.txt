@@ -1,6 +1,6 @@
 streamlit
 google-cloud-bigquery
 
-"protobuf<6"
+protobuf<6
 
 google-cloud-aiplatform
