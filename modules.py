@@ -27,27 +27,7 @@ def display_my_custom_component(value):
     # of the HTML file. HTML must be placed inside the "custom_components" folder.
     html_file_name = "my_custom_component"
     create_component(data, html_file_name)
-
-
-# def display_post(username, user_image, timestamp, content, post_image):
-#     """Displays a formatted social media post."""
-
-#     col1, col2 = st.columns([1, 5])
-
-#     with col1:
-#         if user_image:
-#             st.image(user_image, width=60)
-
-#     with col2:
-#         st.write(f"**{username}**")
-#         st.caption(timestamp)
-
-#     st.write(content)
-
-#     if post_image and post_image != "image_url":
-#         st.image(post_image, use_container_width=True)
-
-#     st.divider()
+    
 
 def display_post(username, user_image, timestamp, content, post_image):
     """Displays a formatted social media post."""
