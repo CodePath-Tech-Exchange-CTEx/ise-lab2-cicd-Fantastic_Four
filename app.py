@@ -10,6 +10,7 @@ from modules import display_my_custom_component, display_post, display_genai_adv
 from data_fetcher import get_user_posts, get_genai_advice, get_user_profile, get_user_sensor_data, get_user_workouts
 
 from community_page import show_community_page
+from activity_page import show_activity_page
 
 userId = 'user1'
 
@@ -55,12 +56,13 @@ def display_app_page():
 
 
 if __name__ == '__main__':
-    # 1. Create a menu in the sidebar
     st.sidebar.title("Navigation")
-    page_selection = st.sidebar.radio("Go to:", ["Home", "Community Feed"])
+    # Add "Activity Dashboard" and "Community Feed" to the list of options
+    page_selection = st.sidebar.radio("Go to:", ["Home", "Community Feed", "Activity Dashboard"])
     
-    # 2. Route the app based on what the user clicks
     if page_selection == "Home":
-        display_app_page() # Shows your original app.py stuff
+        display_app_page()
     elif page_selection == "Community Feed":
-        show_community_page(userId) # Shows your brand new community feed!
+        show_community_page(userId)
+    elif page_selection == "Activity Dashboard":
+        show_activity_page(userId)
