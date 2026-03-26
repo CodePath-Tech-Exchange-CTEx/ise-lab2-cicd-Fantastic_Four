@@ -23,10 +23,10 @@ def show_activity_page(user_id):
     # ==========================================
     st.subheader("Share your progress!")
     
-    # Let's calculate their total steps to share
+    # Calculate total steps to share
     total_steps = 0
     for workout in user_workouts:
-        total_steps += workout['steps']
+        total_steps += workout['steps'] or 0
         
     post_text = f"I just hit {total_steps} total steps! Who wants to join me for my next workout?"
     
@@ -35,10 +35,9 @@ def show_activity_page(user_id):
     
     # The actual button
     if st.button("🚀 Share to Community Feed"):
-        # This calls the BigQuery INSERT function we just wrote!
-        create_shared_post(user_id, post_text)
-        
-        st.success("Successfully posted to the Community Feed!")
-        st.balloons() # A little celebration animation!
-
-#testing to see if Stephanie is a contributor
+        try:
+            create_shared_post(user_id, post_text)
+            st.success("Successfully posted to the Community Feed!")
+            st.balloons()
+        except Exception as e:
+            st.error(f"Failed to post: {e}")
