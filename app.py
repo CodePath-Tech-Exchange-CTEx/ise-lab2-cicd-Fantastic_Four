@@ -19,13 +19,12 @@ from data_fetcher import (
     get_genai_advice, 
     get_user_profile, 
     get_user_sensor_data, 
-    get_user_workouts
+    get_user_workouts,
+    verify_login
 )
 from community_page import show_community_page
 from activity_page import show_activity_page
-
-# Global Constants
-USER_ID = 'user1'
+from data_fetcher import verify_login
 
 
 def display_app_page():
@@ -77,17 +76,51 @@ def display_app_page():
 
 
 if __name__ == '__main__':
-    # 1. Create a menu in the sidebar
-    st.sidebar.title("Navigation")
-    
-    # FIX 1: Add "Activity Dashboard" to the list of options here!
-    page_selection = st.sidebar.radio("Go to:", ["Home", "Community Feed", "Activity Dashboard"])
-    
-    # 2. Route the app based on what the user clicks
-    if page_selection == "Home":
-        display_app_page() 
-    elif page_selection == "Community Feed":
-        show_community_page(USER_ID)
-    elif page_selection == "Activity Dashboard":
-        # FIX 2: Use the uppercase USER_ID variable
-        show_activity_page(USER_ID)
+
+    if 'logged_in_user' not in st.session_state:
+        
+        st.title("Login to SDS Fitness")
+        
+        # 1. The UI
+        Username = st.text_input("Enter your Username:")
+        # password = st.text_input("Enter your password", type="password")
+        
+        # 2. The Button & Validation
+        if st.button("Login"):
+
+            fetched_user_id = verify_login(Username)
+
+            if fetched_user_id is not None:
+                
+                # 3. Giving the wristband!
+                st.session_state['logged_in_user'] = fetched_user_id
+                st.success("Login successful! Welcome!")
+                st.rerun() # Tells Streamlit to refresh the page immediately
+        
+            else:
+                st.error("Incorrect username or password.")
+                
+            
+                
+    else:
+        # --- THIS IS YOUR MAIN APP ---
+        USER_ID = st.session_state['logged_in_user']
+
+        # Create a menu in the sidebar
+        st.sidebar.title("Navigation")
+        
+        page_selection = st.sidebar.radio("Go to:", ["Home", "Community Feed", "Activity Dashboard"])
+        
+        # Route the app based on what the user clicks
+        if page_selection == "Home":
+            display_app_page() 
+        elif page_selection == "Community Feed":
+            show_community_page(USER_ID)
+        elif page_selection == "Activity Dashboard":
+            show_activity_page(USER_ID)
+
+        # --- LOGOUT BUTTON GOES HERE ---
+        st.sidebar.divider() # Add a nice line above the logout button
+        if st.sidebar.button("Logout"):
+            del st.session_state['logged_in_user']
+            st.rerun() # Refresh the page to kick them back to the login screen
