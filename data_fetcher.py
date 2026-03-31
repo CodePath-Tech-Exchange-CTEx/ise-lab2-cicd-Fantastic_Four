@@ -276,7 +276,7 @@ def verify_login(Username):
     if results == []:
         return None
     else:
-        return results[1].UserID
+        return results[0].UserID
 
 
 # ===========================================================================
