@@ -20,11 +20,13 @@ from data_fetcher import (
     get_user_profile, 
     get_user_sensor_data, 
     get_user_workouts,
-    verify_login
+    verify_login,
+    create_user
 )
 from community_page import show_community_page
 from activity_page import show_activity_page
 from data_fetcher import verify_login
+from sign_up_page import sign_up_page
 # from display_app_page import display_app_page
 
 
@@ -78,29 +80,31 @@ def display_app_page():
 if __name__ == '__main__':
 
     if 'logged_in_user' not in st.session_state:
+        # The user isn't logged in yet, so show them the tabs!
+        login_tab, signup_tab = st.tabs(["Login", "Sign Up"])
         
-        st.title("Login to SDS Fitness")
-        
-        # 1. The UI
-        Username = st.text_input("Enter your Username:")
-        password = st.text_input("Enter your password", type="password")
-        
-        # 2. The Button & Validation
-        if st.button("Login"):
-
-            fetched_user_id = verify_login(Username, password)
-
-            if fetched_user_id is not None:
-                
-                # 3. Giving the wristband!
-                st.session_state['logged_in_user'] = fetched_user_id
-                st.success("Login successful! Welcome!")
-                st.rerun() # Tells Streamlit to refresh the page immediately
-        
-            else:
-                st.error("Incorrect username or password.")
-                
+        with login_tab:
+            st.title("Login to SDS Fitness")
             
+            # 1. The UI
+            Username = st.text_input("Enter your Username:")
+            password = st.text_input("Enter your password", type="password")
+            
+            # 2. The Button & Validation
+            if st.button("Login"):
+                fetched_user_id = verify_login(Username, password)
+
+                if fetched_user_id is not None:
+                    # 3. Giving the wristband!
+                    st.session_state['logged_in_user'] = fetched_user_id
+                    st.success("Login successful! Welcome!")
+                    st.rerun() # Tells Streamlit to refresh the page immediately
+                else:
+                    st.error("Incorrect username or password.")
+                    
+        with signup_tab:
+            # Notice how this lines up exactly with "with login_tab:" !
+            sign_up_page()      
                 
     else:
         # --- THIS IS YOUR MAIN APP ---
