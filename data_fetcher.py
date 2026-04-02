@@ -304,3 +304,7 @@ def create_shared_post(user_id, content):
 
     query_job = client.query(query)
     query_job.result()
+
+
+def create_user():
+    pass
