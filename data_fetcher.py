@@ -258,6 +258,26 @@ def get_genai_advice(user_id):
         "image":     chosen_image,
     }
 
+def verify_login(Username, passowrd):
+    """
+    creadentials check
+    """
+    client = bigquery.Client()
+    
+    query = f"""
+        SELECT UserID 
+        FROM {_table('Users')}
+        WHERE Username = '{Username}' AND Password = '{passowrd}'
+    """
+
+    query_job = client.query(query)
+    results = list(query_job.result()) 
+    
+    if results == []:
+        return None
+    else:
+        return results[0].UserID
+
 
 # ===========================================================================
 # WRITE functions
