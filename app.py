@@ -83,12 +83,12 @@ if __name__ == '__main__':
         
         # 1. The UI
         Username = st.text_input("Enter your Username:")
-        # password = st.text_input("Enter your password", type="password")
+        password = st.text_input("Enter your password", type="password")
         
         # 2. The Button & Validation
         if st.button("Login"):
 
-            fetched_user_id = verify_login(Username)
+            fetched_user_id = verify_login(Username, password)
 
             if fetched_user_id is not None:
                 

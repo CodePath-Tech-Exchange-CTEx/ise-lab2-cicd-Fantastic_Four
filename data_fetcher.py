@@ -258,7 +258,7 @@ def get_genai_advice(user_id):
         "image":     chosen_image,
     }
 
-def verify_login(Username):
+def verify_login(Username, passowrd):
     """
     creadentials check
     """
@@ -267,7 +267,7 @@ def verify_login(Username):
     query = f"""
         SELECT UserID 
         FROM {_table('Users')}
-        WHERE Username = '{Username}'
+        WHERE Username = '{Username}' AND Password = '{passowrd}'
     """
 
     query_job = client.query(query)
