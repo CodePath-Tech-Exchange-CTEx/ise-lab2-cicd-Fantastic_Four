@@ -25,10 +25,10 @@ from data_fetcher import (
 from community_page import show_community_page
 from activity_page import show_activity_page
 from data_fetcher import verify_login
+# from display_app_page import display_app_page
 
 
 def display_app_page():
-    """Displays the home page of the app."""
     st.title('Welcome to SDS!')
     
     # --- 1. Custom Component Example ---
