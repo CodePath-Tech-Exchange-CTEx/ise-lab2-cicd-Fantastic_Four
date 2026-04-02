@@ -306,5 +306,22 @@ def create_shared_post(user_id, content):
     query_job.result()
 
 
-def create_user():
-    pass
+def create_user(Name, Username, Password, DateOfBirth, ImageUrl):
+    """
+    Inserts a new user into the BigQuery Useers table.
+
+    Input:  Name, Username, Password, DateOfBirth, ImageUrl
+    Output: None
+    """
+    
+    client = bigquery.Client()
+    
+    UserId = str(uuid.uuid4())
+    
+    query = f"""
+    INSERT INTO {_table('Users')} (UserId, Name, Username, Password, DateOfBirth, ImageUrl)
+    VALUES ('{UserId}', '{Name}', '{Username}', '{Password}', '{DateOfBirth}', '{ImageUrl}')
+    """
+    
+    query_job = client.query(query)
+    query_job.result()
