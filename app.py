@@ -29,6 +29,7 @@ from data_fetcher import verify_login
 from sign_up_page import sign_up_page
 from loggin_page import login_page
 from home_page import home_page
+from profile_page import show_profile_page
 
 
 if __name__ == '__main__':
@@ -51,7 +52,7 @@ if __name__ == '__main__':
         # Create a menu in the sidebar
         st.sidebar.title("Navigation")
         
-        page_selection = st.sidebar.radio("Go to:", ["Home", "Community Feed", "Activity Dashboard"])
+        page_selection = st.sidebar.radio("Go to:", ["Home", "Community Feed", "Activity Dashboard", "My Profile"])
         
         # Route the app based on what the user clicks
         if page_selection == "Home":
@@ -60,6 +61,8 @@ if __name__ == '__main__':
             show_community_page(USER_ID)
         elif page_selection == "Activity Dashboard":
             show_activity_page(USER_ID)
+        elif page_selection == "My Profile":
+            show_profile_page(USER_ID)
 
         # --- LOGOUT BUTTON GOES HERE ---
         st.sidebar.divider() # Add a nice line above the logout button
