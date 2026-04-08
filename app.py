@@ -23,13 +23,14 @@ from data_fetcher import (
     verify_login,
     create_user
 )
-from community_page import show_community_page
-from activity_page import show_activity_page
 from data_fetcher import verify_login
-from sign_up_page import sign_up_page
-from loggin_page import login_page
-from home_page import home_page
-from profile_page import show_profile_page
+
+from view.community_page import show_community_page
+from view.activity_page import show_activity_page
+from view.sign_up_page import sign_up_page
+from view.loggin_page import login_page
+from view.home_page import home_page
+from view.profile_page import show_profile_page
 
 
 if __name__ == '__main__':
