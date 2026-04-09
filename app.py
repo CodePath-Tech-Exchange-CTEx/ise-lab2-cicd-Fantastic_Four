@@ -21,9 +21,9 @@ from data_fetcher import (
     get_user_sensor_data, 
     get_user_workouts,
     verify_login,
-    create_user
+    create_user,
+    add_new_workout
 )
-from data_fetcher import verify_login
 
 from view.community_page import show_community_page
 from view.activity_page import show_activity_page
@@ -31,6 +31,7 @@ from view.sign_up_page import sign_up_page
 from view.loggin_page import login_page
 from view.home_page import home_page
 from view.profile_page import show_profile_page
+from view.add_workout_page import show_add_workout_page
 
 
 if __name__ == '__main__':
@@ -53,7 +54,7 @@ if __name__ == '__main__':
         # Create a menu in the sidebar
         st.sidebar.title("Navigation")
         
-        page_selection = st.sidebar.radio("Go to:", ["Home", "Community Feed", "Activity Dashboard", "My Profile"])
+        page_selection = st.sidebar.radio("Go to:", ["Home", "Community Feed", "Activity Dashboard", "Add Workout", "My Profile"])
         
         # Route the app based on what the user clicks
         if page_selection == "Home":
@@ -62,6 +63,8 @@ if __name__ == '__main__':
             show_community_page(USER_ID)
         elif page_selection == "Activity Dashboard":
             show_activity_page(USER_ID)
+        elif page_selection == "Add Workout":
+            show_add_workout_page(USER_ID)
         elif page_selection == "My Profile":
             show_profile_page(USER_ID)
 

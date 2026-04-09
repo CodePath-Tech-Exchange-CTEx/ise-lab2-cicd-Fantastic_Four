@@ -16,10 +16,9 @@ from data_fetcher import (
     get_user_sensor_data, 
     get_user_workouts,
     verify_login,
-    create_user
+    create_user,
+    add_new_workout
 )
-from data_fetcher import verify_login
-from data_fetcher import add_new_workout
 
 
 def show_add_workout_page(user_id):
