@@ -342,7 +342,7 @@ def add_new_workout(user_id, workout_type, workout_data):
         #pass more data
         query = f"""
         INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned) 
-        VALUES ('{workout_id}', '{user_id}', '{distance}', '{calories}')
+        VALUES ('{workout_id}', '{user_id}', {distance}, {calories})
         """
 
     elif workout_type == "Swimming":
@@ -353,7 +353,7 @@ def add_new_workout(user_id, workout_type, workout_data):
         #pass more data
         query = f"""
         INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned) 
-        VALUES ('{workout_id}', '{user_id}', '{distance}', '{calories}')
+        VALUES ('{workout_id}', '{user_id}', {distance}, {calories})
         """
 
     elif workout_type == "Gym":
@@ -364,7 +364,7 @@ def add_new_workout(user_id, workout_type, workout_data):
         #pass more data
         query = f"""
         INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned) 
-        VALUES ('{workout_id}', '{user_id}', '{distance}', '{calories}')
+        VALUES ('{workout_id}', '{user_id}', {distance}, {calories})
         """
     
     client = bigquery.Client()

@@ -25,6 +25,11 @@ def show_add_workout_page(user_id):
     
     st.title("Add a New Workout")
 
+    date = st.date_input("Date")
+
+    start_time = st.time_input("Start Time")
+    end_time = st.time_input("End Time")
+
     workout_type = st.selectbox("Label", ["Running", "Swimming", "Gym"])
 
     wrokout_data = {}
@@ -38,6 +43,9 @@ def show_add_workout_page(user_id):
         calories = st.number_input("calories")
 
         current_exercise = {
+                "date": date,
+                "start_time": start_time,
+                "end_time": end_time,
                 "total_time": total_time,
                 "miles": miles,
                 "pace": pace,
@@ -57,6 +65,9 @@ def show_add_workout_page(user_id):
         calories = st.number_input("calories")
 
         current_exercise = {
+                "date": date,
+                "start_time": start_time,
+                "end_time": end_time,
                 "total_time": total_time,
                 "miles": miles,
                 "pace": pace,
@@ -96,6 +107,9 @@ def show_add_workout_page(user_id):
             exercises.append(current_exercise)
 
         current_workout = {
+            "date": date,
+            "start_time": start_time,
+            "end_time": end_time,
             "total_time": total_time,
             "hr": hr,
             "hr_pick": hr_pick,
