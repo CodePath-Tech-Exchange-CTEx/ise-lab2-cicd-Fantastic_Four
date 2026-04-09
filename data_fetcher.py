@@ -326,7 +326,18 @@ def create_user(Name, Username, Password, DateOfBirth, ImageUrl):
     query_job = client.query(query)
     query_job.result()
 
+
+
 def add_new_workout(user_id, workout_type, workout_data):
+    """
+    this function gets the data from add_workot_page.py and push them into the Workouts table
+
+    SO FAR, IT IS JUST A TEST: it returns just few data to see if the app works
+
+    TO DO:
+    - update the database, to accept the right data
+    - return the right data from this function
+    """
     
     # We generate a unique ID and get the current time for the database
     import uuid
@@ -341,8 +352,8 @@ def add_new_workout(user_id, workout_type, workout_data):
 
         #pass more data
         query = f"""
-        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned) 
-        VALUES ('{workout_id}', '{user_id}', {distance}, {calories})
+        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
+        VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
         """
 
     elif workout_type == "Swimming":
@@ -352,8 +363,8 @@ def add_new_workout(user_id, workout_type, workout_data):
 
         #pass more data
         query = f"""
-        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned) 
-        VALUES ('{workout_id}', '{user_id}', {distance}, {calories})
+        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
+        VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
         """
 
     elif workout_type == "Gym":
@@ -361,10 +372,10 @@ def add_new_workout(user_id, workout_type, workout_data):
         calories = workout_data["calories"]
         # ... (extract the rest)
 
-        #pass more data
+        #pass more data 
         query = f"""
-        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned) 
-        VALUES ('{workout_id}', '{user_id}', {distance}, {calories})
+        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
+        VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
         """
     
     client = bigquery.Client()
