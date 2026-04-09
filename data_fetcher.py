@@ -325,3 +325,50 @@ def create_user(Name, Username, Password, DateOfBirth, ImageUrl):
     
     query_job = client.query(query)
     query_job.result()
+
+def add_new_workout(user_id, workout_type, workout_data):
+    
+    # We generate a unique ID and get the current time for the database
+    import uuid
+    import datetime
+    workout_id = str(uuid.uuid4())
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    if workout_type == "Running":
+        distance = workout_data["miles"]
+        calories = workout_data["calories"]
+        # ... (extract the rest)
+
+        #pass more data
+        query = f"""
+        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned) 
+        VALUES ('{workout_id}', '{user_id}', '{distance}', '{calories}')
+        """
+
+    elif workout_type == "Swimming":
+        distance = workout_data["miles"]
+        calories = workout_data["calories"]
+        # ... (extract the rest)
+
+        #pass more data
+        query = f"""
+        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned) 
+        VALUES ('{workout_id}', '{user_id}', '{distance}', '{calories}')
+        """
+
+    elif workout_type == "Gym":
+        distance = None # gym doeas't have distance variables
+        calories = workout_data["calories"]
+        # ... (extract the rest)
+
+        #pass more data
+        query = f"""
+        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned) 
+        VALUES ('{workout_id}', '{user_id}', '{distance}', '{calories}')
+        """
+    
+    client = bigquery.Client()
+    
+    query_job = client.query(query)
+    query_job.result()
+

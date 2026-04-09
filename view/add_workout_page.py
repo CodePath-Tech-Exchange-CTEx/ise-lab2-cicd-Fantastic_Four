@@ -19,12 +19,16 @@ from data_fetcher import (
     create_user
 )
 from data_fetcher import verify_login
+from data_fetcher import add_new_workout
+
 
 def show_add_workout_page(user_id):
     
     st.title("Add a New Workout")
 
     workout_type = st.selectbox("Label", ["Running", "Swimming", "Gym"])
+
+    wrokout_data = {}
 
     if workout_type == "Running":
         total_time = st.number_input("Total time")
@@ -34,6 +38,17 @@ def show_add_workout_page(user_id):
         hr_pick = st.number_input("heart rate pick")
         calories = st.number_input("calories")
 
+        current_exercise = {
+                "total_time": total_time,
+                "miles": miles,
+                "pace": pace,
+                "hr": hr,
+                "hr_pick": hr_pick,
+                "calories": calories
+            }
+
+        workout_data = current_exercise
+
     elif workout_type == "Swimming":
         total_time = st.number_input("Total time")
         miles = st.number_input("total miles")
@@ -41,6 +56,17 @@ def show_add_workout_page(user_id):
         hr = st.number_input("heart rate average")
         hr_pick = st.number_input("heart rate pick")
         calories = st.number_input("calories")
+
+        current_exercise = {
+                "total_time": total_time,
+                "miles": miles,
+                "pace": pace,
+                "hr": hr,
+                "hr_pick": hr_pick,
+                "calories": calories
+            }
+
+        workout_data = current_exercise
 
     elif workout_type == "Gym":
         exercises = [] # Start with an empty list
@@ -69,5 +95,20 @@ def show_add_workout_page(user_id):
             
             # 3. Add to our main list
             exercises.append(current_exercise)
+
+        current_workout = {
+            "total_time": total_time,
+            "hr": hr,
+            "hr_pick": hr_pick,
+            "calories": calories,
+            "exercises": exercises
+        }
+
+        workout_data = current_workout
+
+
+    if st.button("Save Workout"):
+        add_new_workout(user_id, workout_type, workout_data) 
+
 
 
