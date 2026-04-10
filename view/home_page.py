@@ -37,14 +37,6 @@ def home_page(USER_ID):
         </style>
     """, unsafe_allow_html=True)
 
-    # --- 2. Sidebar Navigation Logic ---
-    with st.sidebar:
-        st.write("### Menu")
-        # These buttons can switch 'pages' in your main.py
-        if st.button("🏠 My Activities", use_container_width=True):
-            st.session_state['current_page'] = 'home'
-        if st.button("📅 Activity Calendar", use_container_width=True):
-            st.session_state['current_page'] = 'calendar'
 
     # --- 3. Main Header ---
     st.title(f"Welcome {user_name}")
@@ -71,6 +63,6 @@ def home_page(USER_ID):
     with cols[5]:
         st.markdown('<div class="activity-card"><span style="font-size: 30px; font-weight: bold;">+</span></div>', unsafe_allow_html=True)
         if st.button("New", key="add_new"):
-            st.write("New Activity Dialog")
+            st.write("New Activity")
 
     st.divider()
