@@ -279,6 +279,18 @@ def verify_login(Username, passowrd):
         return results[0].UserID
 
 
+def get_user_workout_dates(user_id):
+    """Returns a simple list of workout date strings for the calendar."""
+    # Re-use our existing function to get the data
+    user_workouts = get_user_workouts(user_id)
+    
+    workout_dates = []
+    for workout in user_workouts:
+        date_only = workout['start_timestamp'][:10]
+        workout_dates.append(date_only)
+        
+    return workout_dates
+
 # ===========================================================================
 # WRITE functions
 # ===========================================================================

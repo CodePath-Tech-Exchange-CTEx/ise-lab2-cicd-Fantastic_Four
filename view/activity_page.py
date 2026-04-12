@@ -1,7 +1,7 @@
 import streamlit as st
 
 # Import our backend functions
-from data_fetcher import get_user_workouts, create_shared_post
+from data_fetcher import get_user_workouts, create_shared_post, get_user_workout_dates
 
 # Import the UI components
 from modules import display_activity_summary, display_recent_workouts
@@ -9,17 +9,18 @@ from modules import display_activity_summary, display_recent_workouts
 def show_activity_page(user_id):
     st.title("My Activity Dashboard 🏃‍♂️")
 
-    # 1. Fetch the user's workouts
+    # Fetch the user's workouts and dates
     user_workouts = get_user_workouts(user_id)
+    workout_dates = get_user_workout_dates(user_id)
 
-    # 2. Display the UI components
+    # Display the UI components
     display_activity_summary(user_workouts)
     display_recent_workouts(user_workouts)
 
     st.divider()
 
     # ==========================================
-    # 3. The "Share" Button Feature
+    # The "Share" Button Feature
     # ==========================================
     st.subheader("Share your progress!")
 
