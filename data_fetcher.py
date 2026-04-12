@@ -286,7 +286,7 @@ def get_user_workout_dates(user_id):
     
     workout_dates = []
     for workout in user_workouts:
-        date_only = workout['start_timestamp'][:10]
+        date_only = str(workout['start_timestamp'])[:10]
         workout_dates.append(date_only)
         
     return workout_dates

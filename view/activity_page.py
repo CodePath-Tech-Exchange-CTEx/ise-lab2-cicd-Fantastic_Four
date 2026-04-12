@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_calendar import calendar
 
 # Import our backend functions
 from data_fetcher import get_user_workouts, create_shared_post, get_user_workout_dates
@@ -56,3 +57,23 @@ def show_activity_page(user_id):
             st.balloons()
         except Exception as e:
             st.error(f"Failed to post: {e}")
+
+    # ==========================================
+    # The calendar Feature
+    # ==========================================
+    st.divider()
+    st.subheader("Calendar")
+
+
+    # Format them for the calendar component
+    calendar_events = []
+    for date in workout_dates:
+        # Create a formatted dictionary for each date
+        single_event = {"title": "🏃‍♂️ Workout", "start": date}
+        
+        # Add it to our master list
+        calendar_events.append(single_event)
+
+    # Draw the calendar on the screen!
+    calendar(events=calendar_events)
+    st.divider()
