@@ -350,7 +350,8 @@ def add_new_workout(user_id, workout_type, workout_data):
         calories = workout_data["calories"]
         # ... (extract the rest)
 
-        #pass more data
+        # pass more data
+        # we have to assign values to TotalSteps and StartTimestam. if not, module.py crushes
         query = f"""
         INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
         VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
@@ -361,7 +362,7 @@ def add_new_workout(user_id, workout_type, workout_data):
         calories = workout_data["calories"]
         # ... (extract the rest)
 
-        #pass more data
+        # pass more data
         query = f"""
         INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
         VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
@@ -372,7 +373,7 @@ def add_new_workout(user_id, workout_type, workout_data):
         calories = workout_data["calories"]
         # ... (extract the rest)
 
-        #pass more data 
+        # pass more data 
         query = f"""
         INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
         VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
