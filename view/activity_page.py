@@ -43,7 +43,7 @@ def show_activity_page(user_id):
     else:
         default_msg = f"I just covered {total_distance:.1f} km! Let's get moving 📍"
 
-    # Let the user customize  message
+    # Let the user customize message
     custom_msg = st.text_area("Customize your message:", value=default_msg)
 
     # Show them a preview of what they are sharing
@@ -53,6 +53,7 @@ def show_activity_page(user_id):
     if st.button("🚀 Share to Community Feed"):
         try:
             create_shared_post(user_id, custom_msg)
+            update_streak(user_id)
             st.success("Successfully posted to the Community Feed!")
             st.balloons()
         except Exception as e:

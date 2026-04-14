@@ -16,6 +16,9 @@ from data_fetcher import (
     get_user_posts,
     get_genai_advice,
     create_shared_post,
+    get_streak,
+    update_streak
+    
 )
 
 
@@ -497,6 +500,75 @@ class TestCreateSharedPost(unittest.TestCase):
         self.assertRegex(executed_query,
                          r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 
+
+#----------------------------------------------
+# Testing Streak
+#----------------------------------------------
+class TestStreakLogic(unittest.TestCase):
+
+    @patch('data_fetcher.bigquery.Client')
+    @patch('data_fetcher.datetime.date', wraps=datetime.date)
+    def test_streak_increments_on_consecutive_day(self, mock_date, MockClient):
+        """Scenario B: Logging a workout on a consecutive day should increment the streak."""
+        today = datetime.date(2026, 4, 10)
+        yesterday = datetime.date(2026, 4, 9)
+        mock_date.today.return_value = today
+        
+        row = MagicMock()
+        row.last_activity_date = yesterday
+        row.current_streak = 5
+        row.longest_streak = 10
+        
+        # Logic performs 2 queries: 1. SELECT, 2. UPDATE
+        mock_client = _make_bq_client_mock([[row], []])
+        MockClient.return_value = mock_client
+
+        update_streak('user_123')
+        
+        # Verify call_args_list[1] is the UPDATE query
+        update_call_args = mock_client.query.call_args_list[1][0][0]
+        self.assertIn("SET current_streak = 6", update_call_args)
+
+    @patch('data_fetcher.bigquery.Client')
+    @patch('data_fetcher.datetime.date', wraps=datetime.date)
+    def test_streak_resets_after_missing_a_day(self, mock_date, MockClient):
+        """Scenario C: Logging a workout after a gap of 2+ days should reset streak to 1."""
+        today = datetime.date(2026, 4, 10)
+        three_days_ago = datetime.date(2026, 4, 7)
+        mock_date.today.return_value = today
+        
+        row = MagicMock()
+        row.last_activity_date = three_days_ago
+        row.current_streak = 5
+        row.longest_streak = 10
+        
+        mock_client = _make_bq_client_mock([[row], []])
+        MockClient.return_value = mock_client
+
+        update_streak('user_123')
+        
+        update_call_args = mock_client.query.call_args_list[1][0][0]
+        self.assertIn("SET current_streak = 1", update_call_args)
+
+    @patch('data_fetcher.bigquery.Client')
+    @patch('data_fetcher.datetime.date', wraps=datetime.date)
+    def test_get_streak_death_check(self, mock_date, MockClient):
+        """Verify get_streak returns 0 if more than 1 day has passed since last activity."""
+        today = datetime.date(2026, 4, 10)
+        two_days_ago = datetime.date(2026, 4, 8) 
+        mock_date.today.return_value = today
+        
+        row = MagicMock()
+        row.last_activity_date = two_days_ago
+        row.current_streak = 15
+        row.longest_streak = 20
+        
+        MockClient.return_value = _make_bq_client_mock([[row]])
+
+        result = get_streak('user_123')
+        
+        # (10th - 8th) = 2. current_streak becomes 0.
+        self.assertEqual(result['current_streak'], 0)
 
 if __name__ == '__main__':
     unittest.main()

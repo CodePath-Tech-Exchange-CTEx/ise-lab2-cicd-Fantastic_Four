@@ -18,48 +18,51 @@ from data_fetcher import (
 )
 
 def home_page(USER_ID):
-    st.title('Welcome to SDS!')
-    
-    # --- 1. Custom Component Example ---
-    value = st.text_input('Enter your name:')
-    display_my_custom_component(value)
-    
-    st.divider() # Adds a nice visual break on the screen
+    # Fetch real user data
+    profile = get_user_profile(USER_ID)
+    user_name = profile.get('full_name', 'User')
 
-    # --- 2. Fetch All Data ---
-    # Grouping data fetching makes the code easier to read and maintain
-    user_workouts = get_user_workouts(USER_ID)
-    user_posts = get_user_posts(USER_ID)
-    genai_info = get_genai_advice(USER_ID)
-    
-    # --- 3. Display UI Components ---
-    
-    # Display AI Advice
-    display_genai_advice(
-        genai_info['timestamp'], 
-        genai_info['content'], 
-        genai_info['image']
-    )
-    
-    st.write("") # Quick spacer
-    
-    # Display Workout Summaries
-    display_activity_summary(user_workouts)
-    display_recent_workouts(user_workouts)
-    
+    # --- 1. Custom CSS (Kept from your snippet) ---
+    st.markdown("""
+        <style>
+        .activity-card {
+            background-color: #D9D9D9;
+            border-radius: 15px;
+            height: 100px; width: 100px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto; transition: 0.3s;
+        }
+        .activity-card:hover { background-color: #BDBDBD; }
+        .activity-label { text-align: center; font-size: 14px; margin-top: 8px; color: #333; }
+        </style>
+    """, unsafe_allow_html=True)
+
+
+    # --- 3. Main Header ---
+    st.title(f"Welcome {user_name}")
+    st.write("Don't forget to log a physical activity today")
+    st.write("##") 
+
+    # --- 4. Horizontal Activity Grid ---
+    cols = st.columns(6)
+    activities = [
+        ("Cycling", "🚲"), ("Hiking", "🥾"), ("Runnning", "🏃"), 
+        ("Swimming", "🏊"), ("Yoga", "🧘")
+    ]
+
+    for i, (name, icon) in enumerate(activities):
+        with cols[i]:
+            st.markdown(f'<div class="activity-card"><span style="font-size: 40px;">{icon}</span></div>', unsafe_allow_html=True)
+            # This button records the activity in your database
+            if st.button(f"Log {name}", key=f"btn_{name}"):
+                # Here you would call a backend function like:
+                # create_activity(USER_ID, name)
+                st.success(f"Logged {name}!")
+
+    # --- 5. Add Activity ---
+    with cols[5]:
+        st.markdown('<div class="activity-card"><span style="font-size: 30px; font-weight: bold;">+</span></div>', unsafe_allow_html=True)
+        if st.button("New", key="add_new"):
+            st.write("New Activity")
+
     st.divider()
-    
-    # Display User Posts
-    st.subheader("Your Posts")
-    if not user_posts:
-        st.write("No posts to display yet.")
-    else:
-        for post in user_posts:
-            display_post(
-                post['username'], 
-                post['user_image'], 
-                post['timestamp'], 
-                post['content'], 
-                post['post_image']
-            )
-

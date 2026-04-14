@@ -104,7 +104,6 @@ def get_user_workouts(user_id):
 
     workouts_list = []
     for row in results:
-        # Lat/lng pairs may be NULL in the database — guard gracefully
         start_lat_lng = (
             (row.StartLocationLat, row.StartLocationLong)
             if row.StartLocationLat is not None and row.StartLocationLong is not None
@@ -153,7 +152,6 @@ def get_user_profile(user_id):
     user_job    = client.query(query_for_user)
     friends_job = client.query(query_for_friends)
 
-    # Collect friends first (single pass — avoids re-iteration issues)
     friends_list = [row.UserId2 if hasattr(row, 'UserId2') else row[0]
                     for row in friends_job.result()]
 
@@ -189,7 +187,6 @@ def get_user_posts(user_id):
     query_job = client.query(query)
     posts_results = query_job.result()
 
-    # Grab profile once so we have username / avatar for every post
     user_profile = get_user_profile(user_id)
 
     posts_list = []
@@ -218,12 +215,11 @@ def get_genai_advice(user_id):
     vertexai.init(project=GCP_PROJECT_ID, location="us-central1")
     model = GenerativeModel("gemini-2.5-flash-lite")
 
-    # Pull some user context to make the advice personalised
     try:
         profile  = get_user_profile(user_id)
         workouts = get_user_workouts(user_id)
 
-        recent_steps    = workouts[0]["steps"]    if workouts else "unknown"
+        recent_steps    = workouts[0]["steps"]          if workouts else "unknown"
         recent_calories = workouts[0]["calories_burned"] if workouts else "unknown"
         username        = profile.get("full_name", "athlete")
 
@@ -234,7 +230,6 @@ def get_genai_advice(user_id):
             f"Be encouraging and specific."
         )
     except Exception:
-        # Fallback prompt if data fetching fails
         prompt = (
             "Write exactly one short, motivational sentence for someone "
             "who is actively tracking their workouts."
@@ -243,7 +238,6 @@ def get_genai_advice(user_id):
     ai_response    = model.generate_content(prompt)
     generated_text = ai_response.text.strip()
 
-    # Include a motivational image roughly 30 % of the time
     image_options = [
         "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
         "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
@@ -258,12 +252,50 @@ def get_genai_advice(user_id):
         "image":     chosen_image,
     }
 
-def verify_login(Username, passowrd):
-    """
-    creadentials check
+
+def get_streak(user_id):
+    """Returns the current and longest streak for the given user.
+
+    Performs a midnight check: if more than 1 day has passed since the last
+    activity with no workout logged, the streak is treated as 0 in the UI.
+
+    Input:  user_id
+    Output: dict with keys current_streak, longest_streak, last_activity_date
     """
     client = bigquery.Client()
-    
+
+    query = f"""
+        SELECT current_streak, longest_streak, last_activity_date
+        FROM {_table('Users')}
+        WHERE UserId = '{user_id}'
+    """
+    results = list(client.query(query).result())
+
+    if not results:
+        return {"current_streak": 0, "longest_streak": 0, "last_activity_date": None}
+
+    row     = results[0]
+    today   = datetime.date.today()
+    last    = row.last_activity_date
+    current = row.current_streak or 0
+
+    # Midnight check: more than 1 day since last activity means streak is dead
+    if last and (today - last).days > 1:
+        current = 0
+
+    return {
+        "current_streak":     current,
+        "longest_streak":     row.longest_streak or 0,
+        "last_activity_date": last,
+    }
+
+
+def verify_login(Username, passowrd):
+    """
+    credentials check
+    """
+    client = bigquery.Client()
+
     query = f"""
         SELECT UserID 
         FROM {_table('Users')}
@@ -271,8 +303,8 @@ def verify_login(Username, passowrd):
     """
 
     query_job = client.query(query)
-    results = list(query_job.result()) 
-    
+    results = list(query_job.result())
+
     if results == []:
         return None
     else:
@@ -306,7 +338,6 @@ def create_shared_post(user_id, content):
     post_id      = str(uuid.uuid4())
     current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Escape single quotes in content to prevent SQL errors
     safe_content = content.replace("'", "\\'")
 
     query = f"""
@@ -320,21 +351,20 @@ def create_shared_post(user_id, content):
 
 def create_user(Name, Username, Password, DateOfBirth, ImageUrl):
     """
-    Inserts a new user into the BigQuery Useers table.
+    Inserts a new user into the BigQuery Users table.
 
     Input:  Name, Username, Password, DateOfBirth, ImageUrl
     Output: None
     """
-    
     client = bigquery.Client()
-    
+
     UserId = str(uuid.uuid4())
-    
+
     query = f"""
     INSERT INTO {_table('Users')} (UserId, Name, Username, Password, DateOfBirth, ImageUrl)
     VALUES ('{UserId}', '{Name}', '{Username}', '{Password}', '{DateOfBirth}', '{ImageUrl}')
     """
-    
+
     query_job = client.query(query)
     query_job.result()
 
@@ -396,3 +426,52 @@ def add_new_workout(user_id, workout_type, workout_data):
     query_job = client.query(query)
     query_job.result()
 
+def update_streak(user_id):
+    """Updates the streak for the given user when a workout is logged.
+
+    Follows the 24-hour rule: streak only increments once per calendar day.
+    Resets to 1 if a day was missed.
+
+    Input:  user_id
+    Output: None
+    """
+    client = bigquery.Client()
+
+    query = f"""
+        SELECT current_streak, longest_streak, last_activity_date
+        FROM {_table('Users')}
+        WHERE UserId = '{user_id}'
+    """
+    results = list(client.query(query).result())
+
+    if not results:
+        return
+
+    row     = results[0]
+    today   = datetime.date.today()
+    last    = row.last_activity_date
+    current = row.current_streak or 0
+    longest = row.longest_streak or 0
+
+    # Scenario A: already worked out today, do nothing
+    if last == today:
+        return
+
+    # Scenario B: next day, increment streak
+    elif last == today - datetime.timedelta(days=1):
+        current += 1
+
+    # Scenario C: missed a day or first ever workout, reset to 1
+    else:
+        current = 1
+
+    longest = max(current, longest)
+
+    update_query = f"""
+        UPDATE {_table('Users')}
+        SET current_streak = {current},
+            longest_streak = {longest},
+            last_activity_date = '{today}'
+        WHERE UserId = '{user_id}'
+    """
+    client.query(update_query).result()
