@@ -311,6 +311,18 @@ def verify_login(Username, passowrd):
         return results[0].UserID
 
 
+def get_user_workout_dates(user_id):
+    """Returns a simple list of workout date strings for the calendar."""
+    # Re-use our existing function to get the data
+    user_workouts = get_user_workouts(user_id)
+    
+    workout_dates = []
+    for workout in user_workouts:
+        date_only = str(workout['start_timestamp'])[:10]
+        workout_dates.append(date_only)
+        
+    return workout_dates
+
 # ===========================================================================
 # WRITE functions
 # ===========================================================================
@@ -356,6 +368,63 @@ def create_user(Name, Username, Password, DateOfBirth, ImageUrl):
     query_job = client.query(query)
     query_job.result()
 
+
+
+def add_new_workout(user_id, workout_type, workout_data):
+    """
+    this function gets the data from add_workot_page.py and push them into the Workouts table
+
+    SO FAR, IT IS JUST A TEST: it returns just few data to see if the app works
+
+    TO DO:
+    - update the database, to accept the right data
+    - return the right data from this function
+    """
+    
+    # We generate a unique ID and get the current time for the database
+    import uuid
+    import datetime
+    workout_id = str(uuid.uuid4())
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    if workout_type == "Running":
+        distance = workout_data["miles"]
+        calories = workout_data["calories"]
+        # ... (extract the rest)
+
+        # pass more data
+        # we have to assign values to TotalSteps and StartTimestam. if not, module.py crushes
+        query = f"""
+        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
+        VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
+        """
+
+    elif workout_type == "Swimming":
+        distance = workout_data["miles"]
+        calories = workout_data["calories"]
+        # ... (extract the rest)
+
+        # pass more data
+        query = f"""
+        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
+        VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
+        """
+
+    elif workout_type == "Gym":
+        distance = None # gym doeas't have distance variables
+        calories = workout_data["calories"]
+        # ... (extract the rest)
+
+        # pass more data 
+        query = f"""
+        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
+        VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
+        """
+    
+    client = bigquery.Client()
+    
+    query_job = client.query(query)
+    query_job.result()
 
 def update_streak(user_id):
     """Updates the streak for the given user when a workout is logged.
