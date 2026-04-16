@@ -32,7 +32,7 @@ def show_add_workout_page(user_id):
 
     workout_type = st.selectbox("Label", ["Running", "Swimming", "Gym"])
 
-    wrokout_data = {}
+    workout_data = {}
 
     if workout_type == "Running":
         total_time = st.number_input("Total time")
