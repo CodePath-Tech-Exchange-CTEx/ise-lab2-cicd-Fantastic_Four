@@ -2,251 +2,476 @@
 # data_fetcher.py
 #
 # This file contains functions to fetch data needed for the app.
-#
-# You will re-write these functions in Unit 3, and are welcome to alter the
-# data returned in the meantime. We will replace this file with other data when
-# testing earlier units.
 #############################################################################
 
 import datetime
 import random
-# connection with bigquery (had to run: pip install google-cloud-bigquery)
-from google.cloud import bigquery 
+import uuid
 
-# imports for VertexAI
+from google.cloud import bigquery
+
 import vertexai
 from vertexai.generative_models import GenerativeModel
 
-# needed to generate random ID
-import uuid 
-
-users = {
-    'user1': {
-        'full_name': 'Remi',
-        'username': 'remi_the_rems',
-        'date_of_birth': '1990-01-01',
-        'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-        'friends': ['user2', 'user3', 'user4'],
-    },
-    'user2': {
-        'full_name': 'Blake',
-        'username': 'blake',
-        'date_of_birth': '1990-01-01',
-        'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-        'friends': ['user1'],
-    },
-    'user3': {
-        'full_name': 'Jordan',
-        'username': 'jordanjordanjordan',
-        'date_of_birth': '1990-01-01',
-        'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-        'friends': ['user1', 'user4'],
-    },
-    'user4': {
-        'full_name': 'Gemmy',
-        'username': 'gems',
-        'date_of_birth': '1990-01-01',
-        'profile_image': 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Puma_shoes.jpg',
-        'friends': ['user1', 'user3'],
-    },
-}
+# ---------------------------------------------------------------------------
+# Configuration — swap these two values for your team's project
+# ---------------------------------------------------------------------------
+GCP_PROJECT_ID = "kevin-beltran-pena-uprm"
+DATASET = "ISE"
+# ---------------------------------------------------------------------------
 
 
-# functions to read data
+def _table(name):
+    """Helper that returns a fully-qualified BigQuery table reference."""
+    return f"`{GCP_PROJECT_ID}.{DATASET}.{name}`"
 
-#----------------------------------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------------
+
+# ===========================================================================
+# READ functions
+# ===========================================================================
 
 def get_user_sensor_data(user_id, workout_id):
-    """Returns a list of timestampped information for a given workout.
+    """Returns a list of timestamped sensor readings for a given workout.
 
-    This function currently returns random data. You will re-write it in Unit 3.
+    The workout must belong to the given user_id (verified via a JOIN with
+    the Workouts table, since SensorData has no UserId column of its own).
+
+    Input:  user_id, workout_id
+    Output: list of dicts with keys sensor_type, timestamp, data, units
+    """
+    client = bigquery.Client()
+
+    query = f"""
+        SELECT
+            st.Name        AS sensor_type,
+            sd.Timestamp   AS timestamp,
+            sd.SensorValue AS data,
+            st.Units       AS units
+        FROM {_table('SensorData')} sd
+        JOIN {_table('SensorTypes')} st
+          ON sd.SensorId = st.SensorId
+        JOIN {_table('Workouts')} w
+          ON sd.WorkoutID = w.WorkoutId
+        WHERE sd.WorkoutID = '{workout_id}'
+          AND w.UserId     = '{user_id}'
+        ORDER BY sd.Timestamp
     """
 
-    client = bigquery.Client()
-    
-    # 1. The SQL Query
-    query = f"SELECT * FROM kevin-beltran-pena-uprm.ISE.SensorData  WHERE UserId = '{user_id}' AND WorkoutID = '{workout_id}'"
-    
-    # 2. Run the Query
     query_job = client.query(query)
-    sensorData_results = query_job.result()
-    
-    # 3. Create the empty list
-    sensorData_list = []
-    
-    # 4. Loop through the results using your exact code
-    for row in sensorData_results:
-        sensorData = {}
-        sensorData["SensorId"] = row.SensorId
-        sensorData["WorkoutID"] = row.WorkoutID
-        sensorData["Timestamp"] = row.Timestamp
-        sensorData["SensorValue"] = row.SensorValue
-        
-        sensorData_list.append(sensorData)
+    results = query_job.result()
 
-    # 5. Return the final list of dictionaries!
-    return sensorData_list
+    sensor_list = []
+    for row in results:
+        sensor_list.append({
+            "sensor_type": row.sensor_type,
+            "timestamp":   row.timestamp,
+            "data":        row.data,
+            "units":       row.units,
+        })
 
-#----------------------------------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------------
+    return sensor_list
+
 
 def get_user_workouts(user_id):
-    """Returns a list of user's workouts.
+    """Returns a list of the user's workouts.
 
-    This function currently returns random data. You will re-write it in Unit 3.
+    Input:  user_id
+    Output: list of dicts with keys workout_id, start_timestamp,
+            end_timestamp, start_lat_lng, end_lat_lng,
+            distance, steps, calories_burned
     """
     client = bigquery.Client()
-    
-    # 1. The SQL Query
-    query = f"SELECT * FROM kevin-beltran-pena-uprm.ISE.Workouts WHERE UserId = '{user_id}'"
-    
-    # 2. Run the Query
+
+    query = f"""
+        SELECT
+            WorkoutId,
+            StartTimestamp,
+            EndTimestamp,
+            StartLocationLat,
+            StartLocationLong,
+            EndLocationLat,
+            EndLocationLong,
+            TotalDistance,
+            TotalSteps,
+            CaloriesBurned
+        FROM {_table('Workouts')}
+        WHERE UserId = '{user_id}'
+        ORDER BY StartTimestamp DESC
+    """
+
     query_job = client.query(query)
-    workout_results = query_job.result()
-    
-    # 3. Create the empty list
+    results = query_job.result()
+
     workouts_list = []
-    
-    # 4. Loop through the results using your exact code
-    for row in workout_results:
-        workouts = {}
-        workouts["workout_id"] = row.WorkoutId
-        workouts["start_timestamp"] = row.StartTimestamp
-        workouts["distance"] = row.TotalDistance
-        workouts["steps"] = row.TotalSteps
-        workouts["calories_burned"] = row.CaloriesBurned
-        # ADD MORE DATA
-        
-        workouts_list.append(workouts)
-        
-    # 5. Return the final list of dictionaries!
+    for row in results:
+        start_lat_lng = (
+            (row.StartLocationLat, row.StartLocationLong)
+            if row.StartLocationLat is not None and row.StartLocationLong is not None
+            else None
+        )
+        end_lat_lng = (
+            (row.EndLocationLat, row.EndLocationLong)
+            if row.EndLocationLat is not None and row.EndLocationLong is not None
+            else None
+        )
+
+        workouts_list.append({
+            "workout_id":       row.WorkoutId,
+            "start_timestamp":  row.StartTimestamp,
+            "end_timestamp":    row.EndTimestamp,
+            "start_lat_lng":    start_lat_lng,
+            "end_lat_lng":      end_lat_lng,
+            "distance":         row.TotalDistance,
+            "steps":            row.TotalSteps,
+            "calories_burned":  row.CaloriesBurned,
+        })
+
     return workouts_list
 
-#----------------------------------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------------
 
 def get_user_profile(user_id):
-    # Create a "messenger" client
+    """Returns profile information for the given user.
+
+    Input:  user_id
+    Output: dict with keys full_name, username, date_of_birth,
+            profile_image, friends (list of friend user_ids)
+    """
     client = bigquery.Client()
-    
-    # SQL querys as a string
-    query_for_users = f"SELECT * FROM kevin-beltran-pena-uprm.ISE.Users WHERE UserId = '{user_id}'"
-    query_for_friends = f"SELECT UserId2 FROM kevin-beltran-pena-uprm.ISE.Friends WHERE UserId1 = '{user_id}'"
-    
-    # Send the query to BigQuery and wait for the job to finish
-    query_job_users = client.query(query_for_users)
-    query_job_friends = client.query(query_for_friends)
-    
-    
-    # Get the results back (this returns an iterator of rows)
-    user_results = query_job_users.result()
 
-    users_disctionary = {}
-    for row in user_results:
-        users_disctionary["full_name"] = row.Name
-        users_disctionary["username"] = row.Username
-        users_disctionary["date_of_birth"] = row.DateOfBirth
-        users_disctionary["profile_image"] = row.ImageUrl
-        users_disctionary["friends"] = []
-        
-        for friend_row in query_job_friends.result():
-            users_disctionary["friends"].append(friend_row.UserId2)
-    
-    
-    # return the dictionary
-    return users_disctionary
+    query_for_user = f"""
+        SELECT UserId, Name, Username, ImageUrl, DateOfBirth
+        FROM {_table('Users')}
+        WHERE UserId = '{user_id}'
+    """
+    query_for_friends = f"""
+        SELECT UserId2 FROM {_table('Friends')} WHERE UserId1 = '{user_id}'
+        UNION DISTINCT
+        SELECT UserId1 FROM {_table('Friends')} WHERE UserId2 = '{user_id}'
+    """
 
-#----------------------------------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------------
+    user_job    = client.query(query_for_user)
+    friends_job = client.query(query_for_friends)
+
+    friends_list = [row.UserId2 if hasattr(row, 'UserId2') else row[0]
+                    for row in friends_job.result()]
+
+    profile = {}
+    for row in user_job.result():
+        profile = {
+            "full_name":     row.Name,
+            "username":      row.Username,
+            "date_of_birth": row.DateOfBirth,
+            "profile_image": row.ImageUrl,
+            "friends":       friends_list,
+        }
+
+    return profile
+
 
 def get_user_posts(user_id):
-    
+    """Returns a list of posts authored by the given user.
+
+    Input:  user_id
+    Output: list of dicts with keys user_id, post_id, username,
+            user_image, timestamp, content, post_image
+    """
     client = bigquery.Client()
-    
-    # 1. The Fixed SQL Query (Using AuthorId)
-    query = f"SELECT * FROM kevin-beltran-pena-uprm.ISE.Posts WHERE AuthorId = '{user_id}'"
-    
-    # 2. Run the Query
+
+    query = f"""
+        SELECT PostId, AuthorId, Timestamp, ImageUrl, Content
+        FROM {_table('Posts')}
+        WHERE AuthorId = '{user_id}'
+        ORDER BY Timestamp DESC
+    """
+
     query_job = client.query(query)
     posts_results = query_job.result()
-    
-    # 3. NEW STEP: Grab the user's profile so we have their username and picture!
+
     user_profile = get_user_profile(user_id)
-    
-    # 4. Create the empty list
+
     posts_list = []
-    
-    # 5. Loop through the results
     for row in posts_results:
-        post = {}
-        
-        # Pulling the missing info from the profile we just grabbed:
-        post["username"] = user_profile["username"] 
-        post["user_image"] = user_profile["profile_image"] 
-        
-        # Pulling the rest of the info from the BigQuery row:
-        post["timestamp"] = row.Timestamp
-        post["content"] = row.Content
-        post["post_image"] = row.ImageUrl # Your table calls it ImageUrl!
-        
-        posts_list.append(post)
-        
-    # 6. Return the final list of dictionaries!
+        posts_list.append({
+            "user_id":    user_id,
+            "post_id":    row.PostId,
+            "username":   user_profile.get("username", ""),
+            "user_image": user_profile.get("profile_image", ""),
+            "timestamp":  row.Timestamp,
+            "content":    row.Content,
+            "post_image": row.ImageUrl,
+        })
+
     return posts_list
 
-#----------------------------------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------------
 
 def get_genai_advice(user_id):
+    """Returns one piece of AI-generated fitness advice personalised to the user.
 
-    # 1. Initialize the connection to your project
-    # Note: 'us-central1' is the standard location for Vertex AI
-    vertexai.init(project="kevin-beltran-pena-uprm", location="us-central1")
-    
-    # 2. Pick the brain you want to use (Gemini Flash is fast and great for this)
+    Images are included ~30 % of the time (as required by the spec).
+
+    Input:  user_id
+    Output: dict with keys advice_id, timestamp, content, image
+    """
+    vertexai.init(project=GCP_PROJECT_ID, location="us-central1")
     model = GenerativeModel("gemini-2.5-flash-lite")
-    
-    # 3. Give the AI instructions (the "prompt")
-    prompt = "Write a 1-sentence motivational fitness message for someone tracking their workouts."
-    
-    # 4. Ask the AI to generate the response
-    ai_response = model.generate_content(prompt)
-    
-    # 5. Extract just the text from the response
-    generated_text = ai_response.text
-    
-    # 6. Build the dictionary that modules.py expects
+
+    try:
+        profile  = get_user_profile(user_id)
+        workouts = get_user_workouts(user_id)
+
+        recent_steps    = workouts[0]["steps"]          if workouts else "unknown"
+        recent_calories = workouts[0]["calories_burned"] if workouts else "unknown"
+        username        = profile.get("full_name", "athlete")
+
+        prompt = (
+            f"You are a supportive fitness coach. Write exactly one short, "
+            f"motivational sentence for {username}, who recently logged "
+            f"{recent_steps} steps and burned {recent_calories} calories. "
+            f"Be encouraging and specific."
+        )
+    except Exception:
+        prompt = (
+            "Write exactly one short, motivational sentence for someone "
+            "who is actively tracking their workouts."
+        )
+
+    ai_response    = model.generate_content(prompt)
+    generated_text = ai_response.text.strip()
+
+    image_options = [
+        "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
+        "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
+        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+    ]
+    chosen_image = random.choice(image_options) if random.random() < 0.30 else None
+
     return {
-        'advice_id': 'ai_advice_1',
-        'timestamp': str(datetime.datetime.now()), # Stamps it with the current time
-        'content': generated_text,
-        'image': None # We can leave the image blank for now!
+        "advice_id": str(uuid.uuid4()),
+        "timestamp": str(datetime.datetime.now()),
+        "content":   generated_text,
+        "image":     chosen_image,
     }
 
-#----------------------------------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------------
 
-# functions to write data
+def get_streak(user_id):
+    """Returns the current and longest streak for the given user.
 
-#----------------------------------------------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------------------------------------------
+    Performs a midnight check: if more than 1 day has passed since the last
+    activity with no workout logged, the streak is treated as 0 in the UI.
 
-# CREATE A UNIT TEST FOR THIS FUNCTION
-def create_shared_post(user_id, content):
-    """Inserts a new post into the BigQuery Posts table."""
+    Input:  user_id
+    Output: dict with keys current_streak, longest_streak, last_activity_date
+    """
     client = bigquery.Client()
-    
-    # Generate a random unique ID for the post and get the current time
-    post_id = str(uuid.uuid4())
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    # 1. The SQL INSERT Query
+
     query = f"""
-        INSERT INTO kevin-beltran-pena-uprm.ISE.Posts (PostId, AuthorId, Timestamp, ImageUrl, Content)
-        VALUES ('{post_id}', '{user_id}', '{current_time}', NULL, '{content}')
+        SELECT current_streak, longest_streak, last_activity_date
+        FROM {_table('Users')}
+        WHERE UserId = '{user_id}'
+    """
+    results = list(client.query(query).result())
+
+    if not results:
+        return {"current_streak": 0, "longest_streak": 0, "last_activity_date": None}
+
+    row     = results[0]
+    today   = datetime.date.today()
+    last    = row.last_activity_date
+    current = row.current_streak or 0
+
+    # Midnight check: more than 1 day since last activity means streak is dead
+    if last and (today - last).days > 1:
+        current = 0
+
+    return {
+        "current_streak":     current,
+        "longest_streak":     row.longest_streak or 0,
+        "last_activity_date": last,
+    }
+
+
+def verify_login(Username, passowrd):
+    """
+    credentials check
+    """
+    client = bigquery.Client()
+
+    query = f"""
+        SELECT UserID 
+        FROM {_table('Users')}
+        WHERE Username = '{Username}' AND Password = '{passowrd}'
+    """
+
+    query_job = client.query(query)
+    results = list(query_job.result())
+
+    if results == []:
+        return None
+    else:
+        return results[0].UserID
+
+
+def get_user_workout_dates(user_id):
+    """Returns a simple list of workout date strings for the calendar."""
+    # Re-use our existing function to get the data
+    user_workouts = get_user_workouts(user_id)
+    
+    workout_dates = []
+    for workout in user_workouts:
+        date_only = str(workout['start_timestamp'])[:10]
+        workout_dates.append(date_only)
+        
+    return workout_dates
+
+# ===========================================================================
+# WRITE functions
+# ===========================================================================
+
+def create_shared_post(user_id, content):
+    """Inserts a new post into the BigQuery Posts table.
+
+    Input:  user_id, content (string)
+    Output: None (raises on failure)
+    """
+    client = bigquery.Client()
+
+    post_id      = str(uuid.uuid4())
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    safe_content = content.replace("'", "\\'")
+
+    query = f"""
+        INSERT INTO {_table('Posts')} (PostId, AuthorId, Timestamp, ImageUrl, Content)
+        VALUES ('{post_id}', '{user_id}', '{current_time}', NULL, '{safe_content}')
+    """
+
+    query_job = client.query(query)
+    query_job.result()
+
+
+def create_user(Name, Username, Password, DateOfBirth, ImageUrl):
+    """
+    Inserts a new user into the BigQuery Users table.
+
+    Input:  Name, Username, Password, DateOfBirth, ImageUrl
+    Output: None
+    """
+    client = bigquery.Client()
+
+    UserId = str(uuid.uuid4())
+
+    query = f"""
+    INSERT INTO {_table('Users')} (UserId, Name, Username, Password, DateOfBirth, ImageUrl)
+    VALUES ('{UserId}', '{Name}', '{Username}', '{Password}', '{DateOfBirth}', '{ImageUrl}')
+    """
+
+    query_job = client.query(query)
+    query_job.result()
+
+
+
+def add_new_workout(user_id, workout_type, workout_data):
+    """
+    this function gets the data from add_workot_page.py and push them into the Workouts table
+
+    SO FAR, IT IS JUST A TEST: it returns just few data to see if the app works
+
+    TO DO:
+    - update the database, to accept the right data
+    - return the right data from this function
     """
     
-    # 2. Run the Query to save it to the database!
+    # We generate a unique ID and get the current time for the database
+    import uuid
+    import datetime
+    workout_id = str(uuid.uuid4())
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    if workout_type == "Running":
+        distance = workout_data["miles"]
+        calories = workout_data["calories"]
+        # ... (extract the rest)
+
+        # pass more data
+        # we have to assign values to TotalSteps and StartTimestam. if not, module.py crushes
+        query = f"""
+        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
+        VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
+        """
+
+    elif workout_type == "Swimming":
+        distance = workout_data["miles"]
+        calories = workout_data["calories"]
+        # ... (extract the rest)
+
+        # pass more data
+        query = f"""
+        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
+        VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
+        """
+
+    elif workout_type == "Gym":
+        distance = None # gym doeas't have distance variables
+        calories = workout_data["calories"]
+        # ... (extract the rest)
+
+        # pass more data 
+        query = f"""
+        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
+        VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
+        """
+    
+    client = bigquery.Client()
+    
     query_job = client.query(query)
-    query_job.result() # Wait for it to finish
+    query_job.result()
+
+def update_streak(user_id):
+    """Updates the streak for the given user when a workout is logged.
+
+    Follows the 24-hour rule: streak only increments once per calendar day.
+    Resets to 1 if a day was missed.
+
+    Input:  user_id
+    Output: None
+    """
+    client = bigquery.Client()
+
+    query = f"""
+        SELECT current_streak, longest_streak, last_activity_date
+        FROM {_table('Users')}
+        WHERE UserId = '{user_id}'
+    """
+    results = list(client.query(query).result())
+
+    if not results:
+        return
+
+    row     = results[0]
+    today   = datetime.date.today()
+    last    = row.last_activity_date
+    current = row.current_streak or 0
+    longest = row.longest_streak or 0
+
+    # Scenario A: already worked out today, do nothing
+    if last == today:
+        return
+
+    # Scenario B: next day, increment streak
+    elif last == today - datetime.timedelta(days=1):
+        current += 1
+
+    # Scenario C: missed a day or first ever workout, reset to 1
+    else:
+        current = 1
+
+    longest = max(current, longest)
+
+    update_query = f"""
+        UPDATE {_table('Users')}
+        SET current_streak = {current},
+            longest_streak = {longest},
+            last_activity_date = '{today}'
+        WHERE UserId = '{user_id}'
+    """
+    client.query(update_query).result()

@@ -19,75 +19,64 @@ from data_fetcher import (
     get_genai_advice, 
     get_user_profile, 
     get_user_sensor_data, 
-    get_user_workouts
+    get_user_workouts,
+    verify_login,
+    create_user,
+    add_new_workout
 )
-from community_page import show_community_page
-from activity_page import show_activity_page
 
-# Global Constants
-USER_ID = 'user1'
-
-
-def display_app_page():
-    """Displays the home page of the app."""
-    st.title('Welcome to SDS!')
-    
-    # --- 1. Custom Component Example ---
-    value = st.text_input('Enter your name:')
-    display_my_custom_component(value)
-    
-    st.divider() # Adds a nice visual break on the screen
-
-    # --- 2. Fetch All Data ---
-    # Grouping data fetching makes the code easier to read and maintain
-    user_workouts = get_user_workouts(USER_ID)
-    user_posts = get_user_posts(USER_ID)
-    genai_info = get_genai_advice(USER_ID)
-    
-    # --- 3. Display UI Components ---
-    
-    # Display AI Advice
-    display_genai_advice(
-        genai_info['timestamp'], 
-        genai_info['content'], 
-        genai_info['image']
-    )
-    
-    st.write("") # Quick spacer
-    
-    # Display Workout Summaries
-    display_activity_summary(user_workouts)
-    display_recent_workouts(user_workouts)
-    
-    st.divider()
-    
-    # Display User Posts
-    st.subheader("Your Posts")
-    if not user_posts:
-        st.write("No posts to display yet.")
-    else:
-        for post in user_posts:
-            display_post(
-                post['username'], 
-                post['user_image'], 
-                post['timestamp'], 
-                post['content'], 
-                post['post_image']
-            )
+from view.community_page import show_community_page
+from view.activity_page import show_activity_page
+from view.sign_up_page import sign_up_page
+from view.loggin_page import login_page
+from view.home_page import home_page
+from view.profile_page import show_profile_page
+from view.add_workout_page import show_add_workout_page
 
 
 if __name__ == '__main__':
-    # 1. Create a menu in the sidebar
-    st.sidebar.title("Navigation")
-    
-    # FIX 1: Add "Activity Dashboard" to the list of options here!
-    page_selection = st.sidebar.radio("Go to:", ["Home", "Community Feed", "Activity Dashboard"])
-    
-    # 2. Route the app based on what the user clicks
-    if page_selection == "Home":
-        display_app_page() 
-    elif page_selection == "Community Feed":
-        show_community_page(USER_ID)
-    elif page_selection == "Activity Dashboard":
-        # FIX 2: Use the uppercase USER_ID variable
-        show_activity_page(USER_ID)
+
+    if 'logged_in_user' not in st.session_state:
+        # The user isn't logged in yet, so show them the tabs!
+        login_tab, signup_tab = st.tabs(["Login", "Sign Up"])
+        
+        with login_tab:
+            login_page()
+                    
+        with signup_tab:
+            # Notice how this lines up exactly with "with login_tab:" !
+            sign_up_page()      
+                
+    else:
+       # --- THIS IS YOUR MAIN APP ---
+        USER_ID = st.session_state['logged_in_user']
+
+        if 'next_page' in st.session_state:
+            st.session_state.navigation_radio = st.session_state.next_page
+            del st.session_state.next_page 
+
+        st.sidebar.title("Navigation")
+        
+        
+        page_selection = st.sidebar.radio(
+            "Go to:", 
+            ["Home", "Community Feed", "Activity Dashboard", "Add Workout", "My Profile"],
+            key="navigation_radio" 
+        )
+        # Route the app based on what the user clicks
+        if page_selection == "Home":
+            home_page(USER_ID) 
+        elif page_selection == "Community Feed":
+            show_community_page(USER_ID)
+        elif page_selection == "Activity Dashboard":
+            show_activity_page(USER_ID)
+        elif page_selection == "Add Workout":
+            show_add_workout_page(USER_ID)
+        elif page_selection == "My Profile":
+            show_profile_page(USER_ID)
+
+        # --- LOGOUT BUTTON GOES HERE ---
+        st.sidebar.divider() # Add a nice line above the logout button
+        if st.sidebar.button("Logout"):
+            del st.session_state['logged_in_user']
+            st.rerun() # Refresh the page to kick them back to the login screen

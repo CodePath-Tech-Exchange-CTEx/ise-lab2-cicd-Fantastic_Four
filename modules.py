@@ -60,7 +60,7 @@ def display_post(username, user_image, timestamp, content, post_image):
 
         # Post image
         if post_image:
-            st.image(post_image, use_container_width=True)
+            st.image(post_image, use_column_width=True)
 
         # Actions row
         like_col, comment_col, spacer, save_col = st.columns([1, 1, 6, 1])
@@ -143,10 +143,10 @@ def display_genai_advice(timestamp, content, image):
     """
     st.subheader("GenAI Advice")
     
-    with st.container(border=True): # Line written by Gemini
+    with st.container(border=True): 
         st.caption(timestamp) 
         st.write(content) 
     if image:
-        st.image(image, width="stretch")#line written by gemini
+        st.image(image, use_column_width=True) 
 
     

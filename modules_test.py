@@ -124,7 +124,7 @@ class TestDisplayGenAiAdvice(unittest.TestCase):
         mock_container.assert_called()
         mock_caption.assert_called_once_with(timestamp)
         mock_write.assert_called_once_with(content)
-        mock_image.assert_called_once_with(image_url, width="stretch")
+        mock_image.assert_called_once_with(image_url, use_column_width=True)
 
     @patch('streamlit.container')
     @patch('streamlit.subheader')
