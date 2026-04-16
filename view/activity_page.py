@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_calendar import calendar
 
 # Import our backend functions
-from data_fetcher import get_user_workouts, create_shared_post, get_user_workout_dates
+from data_fetcher import get_user_workouts, create_shared_post, get_user_workout_dates, update_streak
 
 # Import the UI components
 from modules import display_activity_summary, display_recent_workouts
