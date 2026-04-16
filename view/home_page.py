@@ -55,8 +55,8 @@ def home_page(USER_ID):
             st.markdown(f'<div class="activity-card"><span style="font-size: 40px;">{icon}</span></div>', unsafe_allow_html=True)
             # This button records the activity in your database
             if st.button(f"Log {name}", key=f"btn_{name}"):
-                # Here you would call a backend function like:
-                # create_activity(USER_ID, name)
+                st.session_state.navigation_radio = "Add Workout"
+                st.rerun()
                 st.success(f"Logged {name}!")
 
     # --- 5. Add Activity ---

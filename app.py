@@ -50,13 +50,19 @@ if __name__ == '__main__':
     else:
        # --- THIS IS YOUR MAIN APP ---
         USER_ID = st.session_state['logged_in_user']
+
+        if 'next_page' in st.session_state:
+            st.session_state.navigation_radio = st.session_state.next_page
+            del st.session_state.next_page 
+
         st.sidebar.title("Navigation")
-    
+        
+        
         page_selection = st.sidebar.radio(
             "Go to:", 
             ["Home", "Community Feed", "Activity Dashboard", "Add Workout", "My Profile"],
             key="navigation_radio" 
-    )
+        )
         # Route the app based on what the user clicks
         if page_selection == "Home":
             home_page(USER_ID) 
