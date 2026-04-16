@@ -463,7 +463,7 @@ def update_streak(user_id):
 
     # Scenario C: missed a day or first ever workout, reset to 1
     else:
-        current = 1
+        current = 0
 
     longest = max(current, longest)
 
