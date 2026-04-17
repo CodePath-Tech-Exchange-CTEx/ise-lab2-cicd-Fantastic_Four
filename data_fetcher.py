@@ -461,7 +461,7 @@ def update_streak(user_id):
     elif last == today - datetime.timedelta(days=1):
         current += 1
 
-    # Scenario C: missed a day or first ever workout, reset to 1
+    # Scenario C: missed a day or first ever workout, reset to 0
     else:
         current = 0
 
