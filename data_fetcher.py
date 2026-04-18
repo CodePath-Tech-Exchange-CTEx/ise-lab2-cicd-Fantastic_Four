@@ -254,25 +254,25 @@ def get_genai_advice(user_id):
 
 
 def get_streak(user_id):
-    """Returns the current and longest streak for the given user.
+    """Returns the current streak for the given user.
 
     Performs a midnight check: if more than 1 day has passed since the last
     activity with no workout logged, the streak is treated as 0 in the UI.
 
     Input:  user_id
-    Output: dict with keys current_streak, longest_streak, last_activity_date
+    Output: dict with keys current_streak, last_activity_date
     """
     client = bigquery.Client()
 
     query = f"""
-        SELECT current_streak, longest_streak, last_activity_date
+        SELECT current_streak, last_activity_date
         FROM {_table('Users')}
         WHERE UserId = '{user_id}'
     """
     results = list(client.query(query).result())
 
     if not results:
-        return {"current_streak": 0, "longest_streak": 0, "last_activity_date": None}
+        return {"current_streak": 0, "last_activity_date": None}
 
     row     = results[0]
     today   = datetime.date.today()
@@ -285,10 +285,8 @@ def get_streak(user_id):
 
     return {
         "current_streak":     current,
-        "longest_streak":     row.longest_streak or 0,
         "last_activity_date": last,
     }
-
 
 def verify_login(Username, passowrd):
     """
@@ -426,52 +424,70 @@ def add_new_workout(user_id, workout_type, workout_data):
     query_job = client.query(query)
     query_job.result()
 
-def update_streak(user_id):
-    """Updates the streak for the given user when a workout is logged.
+    update_streak(user_id)
 
-    Follows the 24-hour rule: streak only increments once per calendar day.
-    Resets to 1 if a day was missed.
+def update_streak(user_id):
+    """Updates the streak for the given user by counting backward through logged workouts.
+
+    Calculates the streak dynamically starting from today or yesterday, 
+    counting consecutive days backward. Longest streak tracking is omitted.
 
     Input:  user_id
     Output: None
     """
     client = bigquery.Client()
 
-    query = f"""
-        SELECT current_streak, longest_streak, last_activity_date
-        FROM {_table('Users')}
+    # 1. Get all distinct workout dates in Python
+    workouts_query = f"""
+        SELECT StartTimestamp
+        FROM {_table('Workouts')}
         WHERE UserId = '{user_id}'
     """
-    results = list(client.query(query).result())
+    workouts_results = client.query(workouts_query).result()
+    
+    workout_dates = set()
+    for row in workouts_results:
+        if row.StartTimestamp:
+            # Handle timestamps gracefully by slicing the first 10 chars (YYYY-MM-DD)
+            date_str = str(row.StartTimestamp)[:10] 
+            try:
+                # Convert string to a datetime.date object
+                date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+                workout_dates.add(date_obj)
+            except ValueError:
+                continue
 
-    if not results:
-        return
+    # 2. Initialize variables
+    today = datetime.date.today()
+    yesterday = today - datetime.timedelta(days=1)
+    
+    current_streak = 0
+    last_activity = max(workout_dates) if workout_dates else None
 
-    row     = results[0]
-    today   = datetime.date.today()
-    last    = row.last_activity_date
-    current = row.current_streak or 0
-    longest = row.longest_streak or 0
+    # 3. Calculate the streak by counting backwards
+    if workout_dates:
+        # Determine where to start counting
+        if today in workout_dates:
+            current_streak += 1
+            check_date = yesterday
+        elif yesterday in workout_dates:
+            check_date = yesterday
+        else:
+            check_date = None # Streak is dead, stays at 0
 
-    # Scenario A: already worked out today, do nothing
-    if last == today:
-        return
+        # Count backwards day by day
+        if check_date:
+            while check_date in workout_dates:
+                current_streak += 1
+                check_date -= datetime.timedelta(days=1)
 
-    # Scenario B: next day, increment streak
-    elif last == today - datetime.timedelta(days=1):
-        current += 1
-
-    # Scenario C: missed a day or first ever workout, reset to 0
-    else:
-        current = 0
-
-    longest = max(current, longest)
+    # 4. Update the Users table with the fresh calculation
+    last_activity_str = f"'{last_activity}'" if last_activity else "NULL"
 
     update_query = f"""
         UPDATE {_table('Users')}
-        SET current_streak = {current},
-            longest_streak = {longest},
-            last_activity_date = '{today}'
+        SET current_streak = {current_streak},
+            last_activity_date = {last_activity_str}
         WHERE UserId = '{user_id}'
     """
     client.query(update_query).result()

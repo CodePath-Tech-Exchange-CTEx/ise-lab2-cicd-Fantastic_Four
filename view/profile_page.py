@@ -32,17 +32,13 @@ def show_profile_page(user_id):
     # 4. Streak section
     st.subheader("🔥 Workout Streak")
 
-    col1, col2 = st.columns(2)
+    # Display just the current streak directly (no need for columns anymore)
+    if current_streak > 0:
+        st.metric(label="Current Streak", value=f"{current_streak} 🔥")
+    else:
+        st.metric(label="Current Streak", value="0 😴")
 
-    with col1:
-        if current_streak > 0:
-            st.metric(label="Current Streak", value=f"{current_streak} 🔥")
-        else:
-            st.metric(label="Current Streak", value="0 😴")
-
-    with col2:
-        st.metric(label="Longest Streak", value=f"{longest_streak} 🏆")
-
+    # Motivation messages based on the current streak
     if current_streak == 0:
         st.info("No active streak. Log a workout to start one!")
     elif current_streak >= 7:
