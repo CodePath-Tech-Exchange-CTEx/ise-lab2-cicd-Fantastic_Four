@@ -409,7 +409,7 @@ def add_new_workout(user_id, workout_type, workout_data):
         """
 
     elif workout_type == "Gym":
-        distance = None # gym doeas't have distance variables
+        distance = 0 # gym doeas't have distance variables
         calories = workout_data["calories"]
         # ... (extract the rest)
 

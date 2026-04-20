@@ -48,7 +48,7 @@ if __name__ == '__main__':
             sign_up_page()      
                 
     else:
-       # --- THIS IS YOUR MAIN APP ---
+       # --- MAIN APP ---
         USER_ID = st.session_state['logged_in_user']
 
         if 'next_page' in st.session_state:
@@ -60,7 +60,7 @@ if __name__ == '__main__':
         
         page_selection = st.sidebar.radio(
             "Go to:", 
-            ["Home", "Community Feed", "Activity Dashboard", "Add Workout", "My Profile"],
+            ["Home", "Community Feed", "Activity Dashboard", "My Profile"], # add_workout_page delated
             key="navigation_radio" 
         )
         # Route the app based on what the user clicks
@@ -70,12 +70,11 @@ if __name__ == '__main__':
             show_community_page(USER_ID)
         elif page_selection == "Activity Dashboard":
             show_activity_page(USER_ID)
-        elif page_selection == "Add Workout":
-            show_add_workout_page(USER_ID)
+        # elif page_selection == "Add Workout": show_add_workout_page(USER_ID) DELATED
         elif page_selection == "My Profile":
             show_profile_page(USER_ID)
 
-        # --- LOGOUT BUTTON GOES HERE ---
+        # --- LOGOUT BUTTON ---
         st.sidebar.divider() # Add a nice line above the logout button
         if st.sidebar.button("Logout"):
             del st.session_state['logged_in_user']

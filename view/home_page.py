@@ -5,8 +5,10 @@ from modules import (
     display_post, 
     display_genai_advice, 
     display_activity_summary, 
-    display_recent_workouts
+    display_recent_workouts,
+    display_dynamic_workout_form
 )
+
 from data_fetcher import (
     get_user_posts, 
     get_genai_advice, 
@@ -14,7 +16,8 @@ from data_fetcher import (
     get_user_sensor_data, 
     get_user_workouts,
     verify_login,
-    create_user
+    create_user,
+    add_new_workout
 )
 
 def home_page(USER_ID):
@@ -22,7 +25,12 @@ def home_page(USER_ID):
     profile = get_user_profile(USER_ID)
     user_name = profile.get('full_name', 'User')
 
-    # --- 1. Custom CSS (Kept from your snippet) ---
+    # session state
+    # to track the button clicked
+    if 'selected_workout_type' not in st.session_state:
+        st.session_state.selected_workout_type = None
+
+    # --- Custom CSS ---
     st.markdown("""
         <style>
         .activity-card {
@@ -38,28 +46,27 @@ def home_page(USER_ID):
     """, unsafe_allow_html=True)
 
 
-    # --- 3. Main Header ---
+    # --- Main Header ---
     st.title(f"Welcome {user_name}")
     st.write("Don't forget to log a physical activity today")
     st.write("##") 
 
-    # --- 4. Horizontal Activity Grid ---
+    # --- Horizontal Activity Grid ---
     cols = st.columns(6)
     activities = [
-        ("Cycling", "🚲"), ("Hiking", "🥾"), ("Runnning", "🏃"), 
+        ("Cycling", "🚲"), ("Hiking", "🥾"), ("Running", "🏃"), 
         ("Swimming", "🏊"), ("Gym", " 🏋️")
     ]
 
     for i, (name, icon) in enumerate(activities):
         with cols[i]:
             st.markdown(f'<div class="activity-card"><span style="font-size: 40px;">{icon}</span></div>', unsafe_allow_html=True)
-            # This button records the activity in your database
+            
+            # This button Updates session state
             if st.button(f"Log {name}", key=f"btn_{name}"):
-                st.session_state.navigation_radio = "Add Workout"
-                st.rerun()
-                st.success(f"Logged {name}!")
+                st.session_state.selected_workout_type = name
 
-    # --- 5. Add Activity ---
+    # --- Add Activity ---
     with cols[5]:
         st.markdown('<div class="activity-card"><span style="font-size: 30px; font-weight: bold;">+</span></div>', unsafe_allow_html=True)
     
@@ -68,3 +75,10 @@ def home_page(USER_ID):
             st.rerun()
 
     st.divider()
+
+    # --- Dynamic Workout Form ---
+    # Check if a button was clicked, then call the function from modules.py
+    selected_type = st.session_state.selected_workout_type
+    
+    if selected_type:
+        display_dynamic_workout_form(USER_ID, selected_type)
