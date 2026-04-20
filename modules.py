@@ -77,7 +77,7 @@ def display_post(username, user_image, timestamp, content, post_image):
 
 def display_activity_summary(workouts_list):
     if not workouts_list:
-        st.write("No activity to summarize yet!")
+        st.info("🏃‍♂️ No activity to summarize yet! Head over to the Home page to log your first workout.")
         return
 
     total_calories = 0
@@ -94,7 +94,7 @@ def display_activity_summary(workouts_list):
     # Display the beautiful summary UI
     st.subheader("Your Activity Summary")
 
-    st.metric(label="Total Calories", value=f"{total_calories} kcal")
+    st.metric(label="Total Calories", value=f"{round(total_calories)} kcal")
     st.metric(label="Total Distance", value=f"{total_distance} km")
     st.metric(label="Total Steps", value=total_steps)
 
@@ -106,7 +106,7 @@ def display_recent_workouts(workouts_list):
     if not workouts_list:
         st.write("No recent workouts to display.")
 
-    for workout in workouts_list:
+    for workout in workouts_list[:3]:
         with st.container(border=True):
             col1, col2 = st.columns([1, 2])
 
@@ -122,6 +122,22 @@ def display_recent_workouts(workouts_list):
 
         st.write("")
 
+    with st.expander("More..."):
+        for workout in workouts_list[3:]:
+            with st.container(border=True):
+                col1, col2 = st.columns([1, 2])
+
+                with col1:
+                    st.write(f"**Workout on:**")
+                    st.write(workout['start_timestamp'])
+
+                with col2:
+                    m1, m2, m3 = st.columns(3)
+                    m1.metric("Distance", f"{workout['distance']} km")
+                    m2.metric("Steps", workout['steps'])
+                    m3.metric("Burned", f"{workout['calories_burned']} kcal")
+
+        st.write("")
 
 def display_genai_advice(timestamp, content, image):
     """Display a motivational advice by GenAI."""
@@ -141,72 +157,67 @@ def display_dynamic_workout_form(user_id, selected_type):
     if selected_type in ["Running", "Swimming", "Gym"]:
         st.subheader(f"Log your {selected_type} workout")
 
-        # Common inputs for all workouts
-        date = st.date_input("Date")
-        start_time = st.time_input("Start Time")
-        end_time = st.time_input("End Time")
+        # Common inputs for all workouts side-by-side (Date removed)
+        col_start, col_end = st.columns(2)
+        with col_start:
+            start_time = st.time_input("Start Time")
+        with col_end:
+            end_time = st.time_input("End Time")
 
         workout_data = {}
 
         # Render specific fields based on the selected workout
-        if selected_type == "Running":
-            total_time = st.number_input("Total time (minutes)", min_value=0)
-            miles = st.number_input("Total miles", min_value=0.0)
-            pace = st.number_input("Average pace", min_value=0.0)
-            hr = st.number_input("Heart rate average", min_value=0)
-            hr_pick = st.number_input("Heart rate peak", min_value=0)
-            calories = st.number_input("Calories", min_value=0)
+        if selected_type in ["Running", "Swimming"]:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                total_time = st.number_input("Total time (minutes)", min_value=0)
+                pace = st.number_input("Average pace", min_value=0.0)
+                hr = st.number_input("Heart rate average", min_value=0)
+                
+            with col2:
+                miles = st.number_input("Total miles", min_value=0.0)
+                calories = st.number_input("Calories", min_value=0)
+                hr_peak = st.number_input("Heart rate peak", min_value=0)
 
             workout_data = {
-                "date": date,
                 "start_time": start_time,
                 "end_time": end_time,
                 "total_time": total_time,
                 "miles": miles,
                 "pace": pace,
                 "hr": hr,
-                "hr_pick": hr_pick,
-                "calories": calories
-            }
-
-        if selected_type == "Swimming":
-            total_time = st.number_input("Total time (minutes)", min_value=0)
-            miles = st.number_input("Total miles", min_value=0.0)
-            pace = st.number_input("Average pace", min_value=0.0)
-            hr = st.number_input("Heart rate average", min_value=0)
-            hr_pick = st.number_input("Heart rate peak", min_value=0)
-            calories = st.number_input("Calories", min_value=0)
-
-            workout_data = {
-                "date": date,
-                "start_time": start_time,
-                "end_time": end_time,
-                "total_time": total_time,
-                "miles": miles,
-                "pace": pace,
-                "hr": hr,
-                "hr_pick": hr_pick,
+                "hr_peak": hr_peak, 
                 "calories": calories
             }
 
         elif selected_type == "Gym":
             exercises = [] 
             
-            total_time = st.number_input("Total time (minutes)", min_value=0)
-            hr = st.number_input("Heart rate average", min_value=0)
-            hr_pick = st.number_input("Heart rate peak", min_value=0)
-            calories = st.number_input("Calories", min_value=0)
+            col1, col2 = st.columns(2)
+            with col1:
+                total_time = st.number_input("Total time (minutes)", min_value=0)
+                hr = st.number_input("Heart rate average", min_value=0)
+            with col2:
+                calories = st.number_input("Calories", min_value=0)
+                hr_peak = st.number_input("Heart rate peak", min_value=0)
             
             number_exercises = st.number_input("Number of exercises", min_value=1, step=1)
             
             st.write("---")
             for number in range(number_exercises):
-                st.markdown(f"**Exercise {number + 1}**")
-                name = st.text_input("Name of exercise", key=f"name_{number}")
-                sets = st.number_input("How many sets", key=f"sets_{number}", min_value=0)
-                rep = st.number_input("How many repetitions", key=f"reps_{number}", min_value=0)
-                weight = st.number_input("Weight", key=f"weight_{number}", min_value=0.0)
-                st.write("")
+                # Use an expander for each exercise to keep the UI clean
+                with st.expander(f"**Exercise {number + 1}**", expanded=True):
+                    name = st.text_input("Name of exercise", key=f"name_{number}")
+                    
+                    # Nest columns inside the expander for sets, reps, and weight
+                    col_sets, col_reps, col_weight = st.columns(3)
+                    with col_sets:
+                        sets = st.number_input("Sets", key=f"sets_{number}", min_value=0)
+                    with col_reps:
+                        rep = st.number_input("Reps", key=f"reps_{number}", min_value=0)
+                    with col_weight:
+                        weight = st.number_input("Weight", key=f"weight_{number}", min_value=0.0)
                 
                 exercises.append({
                     "name": name,
@@ -216,18 +227,19 @@ def display_dynamic_workout_form(user_id, selected_type):
                 })
 
             workout_data = {
-                "date": date,
                 "start_time": start_time,
                 "end_time": end_time,
                 "total_time": total_time,
                 "hr": hr,
-                "hr_pick": hr_pick,
+                "hr_peak": hr_peak,
                 "calories": calories,
                 "exercises": exercises
             }
 
+        st.write("")
+
         # Save Button
-        if st.button(f"Save {selected_type} Workout"):
+        if st.button(f"Save {selected_type} Workout", use_container_width=True):
             add_new_workout(user_id, selected_type, workout_data) 
             st.success(f"{selected_type} workout logged successfully!")
             
