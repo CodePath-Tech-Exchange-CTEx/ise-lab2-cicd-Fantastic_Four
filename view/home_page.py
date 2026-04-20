@@ -54,7 +54,7 @@ def home_page(USER_ID):
     cols = st.columns(6)
     activities = [
         ("Cycling", "🚲"), ("Hiking", "🥾"), ("Running", "🏃"), 
-        ("Swimming", "🏊"), ("Gym", " 🏋️")
+        ("Swimming", "🏊"), ("Gym", " 🏋️"), ("New Activity", "➕")
     ]
 
     for i, (name, icon) in enumerate(activities):
@@ -65,13 +65,8 @@ def home_page(USER_ID):
             if st.button(f"Log {name}", key=f"btn_{name}"):
                 st.session_state.selected_workout_type = name
 
-    # --- Add Activity ---
-    with cols[5]:
-        st.markdown('<div class="activity-card"><span style="font-size: 30px; font-weight: bold;">+</span></div>', unsafe_allow_html=True)
-    
-        if st.button("New", key="add_new"):
-            st.session_state.navigation_radio = "Add Workout"
-            st.rerun()
+        
+            
 
     st.divider()
 

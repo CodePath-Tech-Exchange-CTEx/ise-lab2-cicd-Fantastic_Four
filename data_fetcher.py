@@ -408,15 +408,25 @@ def add_new_workout(user_id, workout_type, workout_data):
     # Handle specific workout logic
     if workout_type in ["Running", "Swimming"]:
         distance = workout_data.get("miles", 0)
+    elif workout_type == "Cycling":
+        distance = workout_data.get("miles", 0.0)
+        avg_speed = workout_data.get("avg_speed", 0.0)
+        
+    elif workout_type == "Hiking":
+       
+        distance = workout_data.get("miles", 0.0)
+        elevation_gain = workout_data.get("elevation_gain", 0)
+        difficulty = workout_data.get("difficulty", "Moderate")
     else:
         distance = 0.0 # Gym doesn't track distance
-
-    # Push to the main Workouts table
+    
     workout_query = f"""
         INSERT INTO {_table('Workouts')} 
-        (WorkoutId, UserId, WorkoutType, StartTimestamp, EndTimestamp, TotalDistance, CaloriesBurned, TotalTimeMinutes, HeartRateAvg, HeartRatePeak, TotalSteps) 
+        (WorkoutId, UserId, WorkoutType, StartTimestamp, EndTimestamp, TotalDistance, CaloriesBurned, 
+         TotalTimeMinutes, HeartRateAvg, HeartRatePeak, TotalSteps, AvgSpeed, ElevationGain, Difficulty) 
         VALUES 
-        ('{workout_id}', '{user_id}', '{workout_type}', '{start_ts}', '{end_ts}', {distance}, {calories}, {total_time}, {hr_avg}, {hr_peak}, 0)
+        ('{workout_id}', '{user_id}', '{workout_type}', '{start_ts}', '{end_ts}', {distance}, {calories}, 
+         {total_time}, {hr_avg}, {hr_peak}, 0, {avg_speed}, {elevation_gain}, '{difficulty}')
     """
     client.query(workout_query).result()
 
