@@ -32,6 +32,8 @@ from view.home_page import home_page
 from view.profile_page import show_profile_page
 from view.add_workout_page import show_add_workout_page
 
+from view.ai_plan_page import show_ai_plan_page
+
 
 if __name__ == '__main__':
 
@@ -59,7 +61,7 @@ if __name__ == '__main__':
         
         page_selection = st.sidebar.radio(
             "Go to:", 
-            ["Home", "Community Feed", "Activity Dashboard", "My Profile"], # add_workout_page delated
+            ["Home", "Community Feed", "Activity Dashboard", "AI Coach Plan", "My Profile"],
             key="navigation_radio" 
         )
         # Route the app based on what the user clicks
@@ -69,7 +71,8 @@ if __name__ == '__main__':
             show_community_page(USER_ID)
         elif page_selection == "Activity Dashboard":
             show_activity_page(USER_ID)
-        # elif page_selection == "Add Workout": show_add_workout_page(USER_ID) DELATED
+        elif page_selection == "AI Coach Plan":
+            show_ai_plan_page(USER_ID)
         elif page_selection == "My Profile":
             show_profile_page(USER_ID)
 
