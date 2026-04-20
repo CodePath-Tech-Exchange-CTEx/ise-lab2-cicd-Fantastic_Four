@@ -30,48 +30,6 @@ def _table(name):
 # READ functions
 # ===========================================================================
 
-def get_user_sensor_data(user_id, workout_id):
-    """Returns a list of timestamped sensor readings for a given workout.
-
-    The workout must belong to the given user_id (verified via a JOIN with
-    the Workouts table, since SensorData has no UserId column of its own).
-
-    Input:  user_id, workout_id
-    Output: list of dicts with keys sensor_type, timestamp, data, units
-    """
-    client = bigquery.Client()
-
-    query = f"""
-        SELECT
-            st.Name        AS sensor_type,
-            sd.Timestamp   AS timestamp,
-            sd.SensorValue AS data,
-            st.Units       AS units
-        FROM {_table('SensorData')} sd
-        JOIN {_table('SensorTypes')} st
-          ON sd.SensorId = st.SensorId
-        JOIN {_table('Workouts')} w
-          ON sd.WorkoutID = w.WorkoutId
-        WHERE sd.WorkoutID = '{workout_id}'
-          AND w.UserId     = '{user_id}'
-        ORDER BY sd.Timestamp
-    """
-
-    query_job = client.query(query)
-    results = query_job.result()
-
-    sensor_list = []
-    for row in results:
-        sensor_list.append({
-            "sensor_type": row.sensor_type,
-            "timestamp":   row.timestamp,
-            "data":        row.data,
-            "units":       row.units,
-        })
-
-    return sensor_list
-
-
 def get_user_workouts(user_id):
     """Returns a list of the user's workouts.
 
