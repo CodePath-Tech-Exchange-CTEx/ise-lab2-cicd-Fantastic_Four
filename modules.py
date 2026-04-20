@@ -94,7 +94,7 @@ def display_activity_summary(workouts_list):
     # Display the beautiful summary UI
     st.subheader("Your Activity Summary")
 
-    st.metric(label="Total Calories", value=f"{total_calories} kcal")
+    st.metric(label="Total Calories", value=f"{round(total_calories)} kcal")
     st.metric(label="Total Distance", value=f"{total_distance} km")
     st.metric(label="Total Steps", value=total_steps)
 
@@ -106,7 +106,7 @@ def display_recent_workouts(workouts_list):
     if not workouts_list:
         st.write("No recent workouts to display.")
 
-    for workout in workouts_list:
+    for workout in workouts_list[:3]:
         with st.container(border=True):
             col1, col2 = st.columns([1, 2])
 
@@ -122,6 +122,22 @@ def display_recent_workouts(workouts_list):
 
         st.write("")
 
+    with st.expander("More..."):
+        for workout in workouts_list[3:]:
+            with st.container(border=True):
+                col1, col2 = st.columns([1, 2])
+
+                with col1:
+                    st.write(f"**Workout on:**")
+                    st.write(workout['start_timestamp'])
+
+                with col2:
+                    m1, m2, m3 = st.columns(3)
+                    m1.metric("Distance", f"{workout['distance']} km")
+                    m2.metric("Steps", workout['steps'])
+                    m3.metric("Burned", f"{workout['calories_burned']} kcal")
+
+        st.write("")
 
 def display_genai_advice(timestamp, content, image):
     """Display a motivational advice by GenAI."""

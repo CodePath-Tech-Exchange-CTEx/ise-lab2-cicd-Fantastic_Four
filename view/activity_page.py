@@ -15,7 +15,32 @@ def show_activity_page(user_id):
     workout_dates = get_user_workout_dates(user_id)
 
     # Display the UI components
+
+     # activity summary
     display_activity_summary(user_workouts)
+    
+    st.divider()
+
+     # ==========================================
+    # The calendar Feature
+    # ==========================================
+    st.subheader("Calendar")
+
+
+    # Format them for the calendar component
+    calendar_events = []
+    for date in workout_dates:
+        # Create a formatted dictionary for each date
+        single_event = {"title": "🏃‍♂️ Workout", "start": date}
+        
+        # Add it to our master list
+        calendar_events.append(single_event)
+
+    # Draw the calendar on the screen!
+    calendar(events=calendar_events)
+    st.divider()
+
+    # recent workouts
     display_recent_workouts(user_workouts)
 
     st.divider()
@@ -59,22 +84,4 @@ def show_activity_page(user_id):
         except Exception as e:
             st.error(f"Failed to post: {e}")
 
-    # ==========================================
-    # The calendar Feature
-    # ==========================================
-    st.divider()
-    st.subheader("Calendar")
-
-
-    # Format them for the calendar component
-    calendar_events = []
-    for date in workout_dates:
-        # Create a formatted dictionary for each date
-        single_event = {"title": "🏃‍♂️ Workout", "start": date}
-        
-        # Add it to our master list
-        calendar_events.append(single_event)
-
-    # Draw the calendar on the screen!
-    calendar(events=calendar_events)
-    st.divider()
+   
