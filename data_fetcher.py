@@ -387,6 +387,11 @@ def add_new_workout(user_id, workout_type, workout_data):
     
     client = bigquery.Client()
 
+    distance = 0.0
+    avg_speed = 0.0
+    elevation_gain = 0
+    difficulty = "N/A"
+
     #Setup Time and IDs
     workout_id = str(uuid.uuid4())
     miami_tz = ZoneInfo("America/New_York")
