@@ -8,6 +8,8 @@ import datetime
 import random
 import uuid
 
+from zoneinfo import ZoneInfo # can change the time zone (not used yet)
+
 from google.cloud import bigquery
 
 import vertexai
