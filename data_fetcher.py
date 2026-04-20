@@ -8,7 +8,7 @@ import datetime
 import random
 import uuid
 
-from zoneinfo import ZoneInfo # can change the time zone (not used yet)
+from zoneinfo import ZoneInfo
 
 from google.cloud import bigquery
 
@@ -33,27 +33,28 @@ def _table(name):
 # ===========================================================================
 
 def get_user_workouts(user_id):
-    """Returns a list of the user's workouts.
+    """Returns a list of the user's workouts matching the updated BigQuery schema.
 
     Input:  user_id
-    Output: list of dicts with keys workout_id, start_timestamp,
-            end_timestamp, start_lat_lng, end_lat_lng,
-            distance, steps, calories_burned
+    Output: list of dicts with keys workout_id, workout_type, start_timestamp,
+            end_timestamp, distance, steps, calories_burned, total_time, hr_avg, hr_peak
     """
+    from google.cloud import bigquery
     client = bigquery.Client()
 
+    # Updated query
     query = f"""
         SELECT
             WorkoutId,
+            WorkoutType,
             StartTimestamp,
             EndTimestamp,
-            StartLocationLat,
-            StartLocationLong,
-            EndLocationLat,
-            EndLocationLong,
             TotalDistance,
             TotalSteps,
-            CaloriesBurned
+            CaloriesBurned,
+            TotalTimeMinutes,
+            HeartRateAvg,
+            HeartRatePeak
         FROM {_table('Workouts')}
         WHERE UserId = '{user_id}'
         ORDER BY StartTimestamp DESC
@@ -64,30 +65,21 @@ def get_user_workouts(user_id):
 
     workouts_list = []
     for row in results:
-        start_lat_lng = (
-            (row.StartLocationLat, row.StartLocationLong)
-            if row.StartLocationLat is not None and row.StartLocationLong is not None
-            else None
-        )
-        end_lat_lng = (
-            (row.EndLocationLat, row.EndLocationLong)
-            if row.EndLocationLat is not None and row.EndLocationLong is not None
-            else None
-        )
 
         workouts_list.append({
             "workout_id":       row.WorkoutId,
+            "workout_type":     row.WorkoutType if hasattr(row, 'WorkoutType') else "Unknown",
             "start_timestamp":  row.StartTimestamp,
             "end_timestamp":    row.EndTimestamp,
-            "start_lat_lng":    start_lat_lng,
-            "end_lat_lng":      end_lat_lng,
             "distance":         row.TotalDistance,
             "steps":            row.TotalSteps,
             "calories_burned":  row.CaloriesBurned,
+            "total_time":       row.TotalTimeMinutes if hasattr(row, 'TotalTimeMinutes') else 0,
+            "hr_avg":           row.HeartRateAvg if hasattr(row, 'HeartRateAvg') else 0,
+            "hr_peak":          row.HeartRatePeak if hasattr(row, 'HeartRatePeak') else 0,
         })
 
     return workouts_list
-
 
 def get_user_profile(user_id):
     """Returns profile information for the given user.
@@ -330,61 +322,72 @@ def create_user(Name, Username, Password, DateOfBirth, ImageUrl):
 
 def add_new_workout(user_id, workout_type, workout_data):
     """
-    this function gets the data from add_workot_page.py and push them into the Workouts table
-
-    SO FAR, IT IS JUST A TEST: it returns just few data to see if the app works
-
-    TO DO:
-    - update the database, to accept the right data
-    - return the right data from this function
+    Takes data from the dynamic Streamlit form and pushes it to BigQuery.
+    Handles the Workouts table, and optionally the GymExercises table.
     """
     
-    # We generate a unique ID and get the current time for the database
-    import uuid
-    import datetime
-    workout_id = str(uuid.uuid4())
-    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    if workout_type == "Running":
-        distance = workout_data["miles"]
-        calories = workout_data["calories"]
-        # ... (extract the rest)
-
-        # pass more data
-        # we have to assign values to TotalSteps and StartTimestam. if not, module.py crushes
-        query = f"""
-        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
-        VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
-        """
-
-    elif workout_type == "Swimming":
-        distance = workout_data["miles"]
-        calories = workout_data["calories"]
-        # ... (extract the rest)
-
-        # pass more data
-        query = f"""
-        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
-        VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
-        """
-
-    elif workout_type == "Gym":
-        distance = 0 # gym doeas't have distance variables
-        calories = workout_data["calories"]
-        # ... (extract the rest)
-
-        # pass more data 
-        query = f"""
-        INSERT INTO {_table('Workouts')} (WorkoutId, UserId, TotalDistance, CaloriesBurned, TotalSteps, StartTimestamp) 
-        VALUES ('{workout_id}', '{user_id}', {distance}, {calories}, 0, '{current_time}')
-        """
     
     client = bigquery.Client()
-    
-    query_job = client.query(query)
-    query_job.result()
 
+    #Setup Time and IDs
+    workout_id = str(uuid.uuid4())
+    miami_tz = ZoneInfo("America/New_York")
+    today = datetime.datetime.now(miami_tz).date()
+
+    # Combine the Streamlit time objects with today's date for BigQuery
+    start_dt = datetime.datetime.combine(today, workout_data["start_time"])
+    end_dt = datetime.datetime.combine(today, workout_data["end_time"])
+    
+    start_ts = start_dt.strftime("%Y-%m-%d %H:%M:%S")
+    end_ts = end_dt.strftime("%Y-%m-%d %H:%M:%S")
+
+    # Extract shared data (using .get() safely falls back to 0 if missing)
+    total_time = workout_data.get("total_time", 0)
+    calories = workout_data.get("calories", 0)
+    hr_avg = workout_data.get("hr", 0)
+    hr_peak = workout_data.get("hr_peak", 0)
+
+    # Handle specific workout logic
+    if workout_type in ["Running", "Swimming"]:
+        distance = workout_data.get("miles", 0)
+    else:
+        distance = 0.0 # Gym doesn't track distance
+
+    # Push to the main Workouts table
+    workout_query = f"""
+        INSERT INTO {_table('Workouts')} 
+        (WorkoutId, UserId, WorkoutType, StartTimestamp, EndTimestamp, TotalDistance, CaloriesBurned, TotalTimeMinutes, HeartRateAvg, HeartRatePeak, TotalSteps) 
+        VALUES 
+        ('{workout_id}', '{user_id}', '{workout_type}', '{start_ts}', '{end_ts}', {distance}, {calories}, {total_time}, {hr_avg}, {hr_peak}, 0)
+    """
+    client.query(workout_query).result()
+
+    # Push to the GymExercises table (if it's a Gym workout)
+    if workout_type == "Gym" and "exercises" in workout_data:
+        exercises = workout_data["exercises"]
+        
+        if exercises:
+            value_strings = []
+            for ex in exercises:
+                ex_id = str(uuid.uuid4())
+                # Replace apostrophes to prevent SQL crashes (e.g., "Lat Pulldown's")
+                safe_name = ex['name'].replace("'", "\\'") 
+                
+                # Format a single row of values
+                val = f"('{ex_id}', '{workout_id}', '{safe_name}', {ex['sets']}, {ex['reps']}, {ex['weight']})"
+                value_strings.append(val)
+            
+            # Combine all rows into one giant INSERT query
+            gym_query = f"""
+                INSERT INTO {_table('GymExercises')} 
+                (ExerciseId, WorkoutId, ExerciseName, Sets, Reps, Weight)
+                VALUES {', '.join(value_strings)}
+            """
+            client.query(gym_query).result()
+
+    # Update the user's streak
     update_streak(user_id)
+
 
 def update_streak(user_id):
     client = bigquery.Client()
