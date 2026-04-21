@@ -52,7 +52,7 @@ def home_page(USER_ID):
 
 
     # --- Main Header ---
-    st.title(f"Welcome {user_name}")
+    st.title(f"Hello {user_name}")
     st.write("Don't forget to log a physical activity today")
     st.write("##") 
 

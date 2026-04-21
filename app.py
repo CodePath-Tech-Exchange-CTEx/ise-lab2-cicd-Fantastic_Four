@@ -56,28 +56,82 @@ if __name__ == '__main__':
             st.session_state.navigation_radio = st.session_state.next_page
             del st.session_state.next_page 
 
+        # --- Sidebar Styling ---
+        # We target Streamlit's internal HTML elements using their data-testid attributes.
+        # `stSidebar` wraps the whole sidebar. The radio options use `stRadio` labels.
+        # The selected radio item gets a highlighted pill via the :has() CSS selector,
+        # which checks if a hidden radio input inside the label is checked.
+        st.markdown("""
+            <style>
+            [data-testid="stSidebar"] {
+                background-color: #1a1a2e;
+                padding-top: 2rem;
+            }
+            [data-testid="stSidebar"] * {
+                color: #e0e0e0 !important;
+            }
+            [data-testid="stSidebar"] .stRadio label {
+                display: block;
+                padding: 10px 16px;
+                border-radius: 10px;
+                margin-bottom: 4px;
+                font-size: 15px;
+                transition: background 0.2s;
+                cursor: pointer;
+            }
+            [data-testid="stSidebar"] .stRadio label:hover {
+                background-color: rgba(255,255,255,0.08);
+            }
+            [data-testid="stSidebar"] .stRadio label:has(input:checked) {
+                background-color: #e94560;
+                color: white !important;
+                font-weight: 600;
+            }
+            [data-testid="stSidebar"] .stRadio [data-testid="stMarkdownContainer"] p {
+                font-size: 13px;
+                opacity: 0.6;
+                margin-bottom: 8px;
+            }
+            [data-testid="stSidebar"] hr {
+                border-color: rgba(255,255,255,0.15);
+            }
+            [data-testid="stSidebar"] .stButton button {
+                width: 100%;
+                background-color: transparent;
+                border: 1px solid rgba(255,255,255,0.25);
+                color: #e0e0e0 !important;
+                border-radius: 10px;
+                transition: background 0.2s;
+            }
+            [data-testid="stSidebar"] .stButton button:hover {
+                background-color: rgba(255,255,255,0.08);
+                border-color: rgba(255,255,255,0.4);
+            }
+            </style>
+        """, unsafe_allow_html=True)
+
         st.sidebar.title("Navigation")
-        
-        
+
+        # Icons are added directly to the label strings.
+        # The if/elif routing below must match these strings exactly.
         page_selection = st.sidebar.radio(
-            "Go to:", 
-            ["Home", "Community Feed", "Activity Dashboard", "AI Coach Plan", "My Profile"],
-            key="navigation_radio" 
+            "Go to:",
+            ["🏠  Home", "👥  Community Feed", "📊  Activity Dashboard", "🤖  AI Coach Plan", "👤  My Profile"],
+            key="navigation_radio"
         )
-        # Route the app based on what the user clicks
-        if page_selection == "Home":
-            home_page(USER_ID) 
-        elif page_selection == "Community Feed":
+
+        if page_selection == "🏠  Home":
+            home_page(USER_ID)
+        elif page_selection == "👥  Community Feed":
             show_community_page(USER_ID)
-        elif page_selection == "Activity Dashboard":
+        elif page_selection == "📊  Activity Dashboard":
             show_activity_page(USER_ID)
-        elif page_selection == "AI Coach Plan":
+        elif page_selection == "🤖  AI Coach Plan":
             show_ai_plan_page(USER_ID)
-        elif page_selection == "My Profile":
+        elif page_selection == "👤  My Profile":
             show_profile_page(USER_ID)
 
-        # --- LOGOUT BUTTON ---
-        st.sidebar.divider() # Add a nice line above the logout button
-        if st.sidebar.button("Logout"):
+        st.sidebar.divider()
+        if st.sidebar.button("⏻  Logout"):
             del st.session_state['logged_in_user']
-            st.rerun() # Refresh the page to kick them back to the login screen
+            st.rerun()
