@@ -1,28 +1,34 @@
 import streamlit as st
 
 from modules import (
-    display_my_custom_component, 
-    display_post, 
-    display_genai_advice, 
-    display_activity_summary, 
+    display_my_custom_component,
+    display_post,
+    display_genai_advice,
+    display_activity_summary,
     display_recent_workouts,
-    display_dynamic_workout_form
+    display_dynamic_workout_form,
+    display_streak_badge
 )
 
 from data_fetcher import (
-    get_user_posts, 
-    get_genai_advice, 
-    get_user_profile, 
+    get_user_posts,
+    get_genai_advice,
+    get_user_profile,
     get_user_workouts,
     verify_login,
     create_user,
-    add_new_workout
+    add_new_workout,
+    get_streak
 )
 
 def home_page(USER_ID):
     # Fetch real user data
     profile = get_user_profile(USER_ID)
     user_name = profile.get('full_name', 'User')
+
+    # --- Streak Badge (top-right corner) ---
+    streak_data = get_streak(USER_ID)
+    display_streak_badge(streak_data.get('current_streak', 0))
 
     # session state
     # to track the button clicked

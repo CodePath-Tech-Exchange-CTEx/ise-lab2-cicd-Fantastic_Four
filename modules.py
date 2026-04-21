@@ -8,6 +8,40 @@ from internals import create_component
 import streamlit as st # import streamlit
 from data_fetcher import add_new_workout
 
+'''function to display streak on homepage'''
+def display_streak_badge(streak: int):
+    """Renders a fixed-position streak badge in the top-right corner of the screen."""
+    color = "#FF4500" if streak > 0 else "#9E9E9E"
+    label = f"{streak} day streak" if streak != 1 else "1 day streak"
+
+    st.markdown(f"""
+        <style>
+        .streak-badge {{
+            position: fixed;
+            top: 70px;
+            right: 24px;
+            z-index: 9999;
+            background: {color};
+            color: white;
+            border-radius: 20px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+            font-size: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            user-select: none;
+        }}
+        .streak-badge .streak-count {{
+            font-size: 20px;
+        }}
+        </style>
+        <div class="streak-badge">
+            🔥 <span class="streak-count">{streak}</span> <span>{label.split(' ', 1)[1]}</span>
+        </div>
+    """, unsafe_allow_html=True)
+
 def display_my_custom_component(value):
     """Displays a 'my custom component'."""
     data = {'NAME': value}
