@@ -6,38 +6,48 @@ def show_ai_plan_page(user_id):
     st.title("🤖 AI Coach: Plan Your Week")
     st.write("Let your AI coach design your next session. Pick a suggestion and add it to your calendar.")
     
-    # 1. Generate Suggestions Section
+    # Generate Suggestions Section
     if st.button("Generate New Workout Ideas", type="primary"):
         with st.spinner("Coach is thinking..."):
             st.session_state['ai_suggestions'] = generate_ai_workout_plan(user_id)
             
     # Display the suggestions if they exist in the session state
+    # Display the suggestions if they exist in the session state
     if 'ai_suggestions' in st.session_state and st.session_state['ai_suggestions']:
         st.divider()
         st.subheader("Your Custom Suggestions")
         
-        # Display the 3 options in columns
-        cols = st.columns(3)
+        # 1. Extract the workout types to use as tab names
+        tab_names = [suggestion['workout_type'] for suggestion in st.session_state['ai_suggestions']]
+        
+        # 2. Create the tabs
+        tabs = st.tabs(tab_names)
+        
+        # 3. Populate each tab
         for i, suggestion in enumerate(st.session_state['ai_suggestions']):
-            with cols[i]:
-                with st.container(border=True):
-                    st.markdown(f"### {suggestion['title']}")
-                    st.caption(f"{suggestion['workout_type']} • {suggestion['total_time']} mins")
-                    st.write(suggestion['description'])
-                    
-                    # Date picker and schedule button for each specific card
+            with tabs[i]:
+                st.markdown(f"### 🏅 {suggestion['title']}")
+                st.caption(f"**⏱️ Total Time:** {suggestion['total_time']} mins")
+                
+                # Using an info box makes the description pop
+                st.info(suggestion['description'])
+                
+                # Put the date picker and button side-by-side for a cleaner look
+                col1, col2 = st.columns([2, 1])
+                with col1:
                     future_date = st.date_input(
                         "Schedule for:", 
                         value=datetime.date.today() + datetime.timedelta(days=1),
                         min_value=datetime.date.today(),
                         key=f"date_{i}"
                     )
-                    
-                    if st.button("Add to Calendar", key=f"add_{i}", use_container_width=True):
+                with col2:
+                    st.write("") # A little spacer to push the button down so it aligns
+                    st.write("")
+                    if st.button("Add to Calendar", key=f"add_{i}", use_container_width=True, type="primary"):
                         schedule_ai_workout(user_id, suggestion['workout_type'], future_date, suggestion['total_time'])
-                        st.success("Scheduled!")
-                        st.rerun() # Refresh to show in the list below
-
+                        st.success(f"Added to {suggestion['workout_type']} Calendar!")
+                        st.rerun()
     st.divider()
     
     # 2. Manage Scheduled Workouts Section

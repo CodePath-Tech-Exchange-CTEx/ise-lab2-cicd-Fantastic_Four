@@ -507,15 +507,13 @@ def update_streak(user_id):
 # ===========================================================================
 # AI functions
 # ===========================================================================
-import json
 
 def generate_ai_workout_plan(user_id):
-    """Generates 3 workout suggestions from GenAI in JSON format."""
-    import vertexai
-    from vertexai.generative_models import GenerativeModel
+    """Generates 5 workout suggestions from GenAI in JSON format."""
+
     
     vertexai.init(project=GCP_PROJECT_ID, location="us-central1")
-    # Using JSON mode ensures Python can easily parse the 3 options
+    # Using JSON mode ensures Python can easily parse the 5 options
     model = GenerativeModel(
         "gemini-2.5-flash-lite",
         generation_config={"response_mime_type": "application/json"}
@@ -526,11 +524,11 @@ def generate_ai_workout_plan(user_id):
 
     prompt = f"""
     You are an elite fitness coach designing a plan for {username}. 
-    Provide exactly 3 distinct workout suggestions (e.g., 1 Running, 1 Swimming, 1 Gym).
-    Return the response as a JSON array containing 3 objects. 
+    Provide exactly 5 distinct workout suggestions, one for each of these sports: Running, Swimming, Gym, Hiking, and Cycling.
+    Return the response as a JSON array containing 5 objects. 
     Each object must have these keys:
     - "title": A catchy title (string)
-    - "workout_type": Must be "Running", "Swimming", or "Gym" (string)
+    - "workout_type": Must be "Running", "Swimming", "Gym", "Hiking", or "Cycling" (string)
     - "total_time": Estimated minutes (integer)
     - "description": A short, 1-sentence summary of the workout (string)
     """
