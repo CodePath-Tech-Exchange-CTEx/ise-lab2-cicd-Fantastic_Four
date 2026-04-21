@@ -6,7 +6,16 @@
 
 from internals import create_component
 import streamlit as st # import streamlit
-from data_fetcher import add_new_workout
+
+
+from streamlit_calendar import calendar
+
+from data_fetcher import add_new_workout, create_shared_post, update_streak
+
+
+import datetime
+
+from data_fetcher import schedule_ai_workout, delete_workout
 
 '''function to display streak on homepage'''
 def display_streak_badge(streak: int):
@@ -330,3 +339,254 @@ def display_dynamic_workout_form(user_id, selected_type):
     # Placeholder for Cycling and Hiking until you build them out
     elif selected_type in ["New Activity"]:
         st.info(f"The form for {selected_type} is coming soon! Check back later.")
+
+
+#----------------------------------
+# Activity Page
+#-----------------------------------
+def display_training_calendar(calendar_events):
+    """Displays the interactive training calendar."""
+    st.subheader("Training Calendar")
+
+    # Configure the premium look and feel
+    calendar_options = {
+        "headerToolbar": {
+            "left": "today prev,next",
+            "center": "title",
+            "right": "dayGridMonth,timeGridWeek,listWeek",
+        },
+        "initialView": "dayGridMonth",
+        "navLinks": True, 
+        "eventBorderRadius": "6px", 
+        "themeSystem": "standard",
+        "height": 600, 
+    }
+
+    # Render the calendar
+    calendar(events=calendar_events, options=calendar_options)
+
+
+def display_share_progress(user_id, user_workouts):
+    """Displays the UI for calculating totals and sharing to the community feed."""
+    st.subheader("Share your progress!")
+
+    # Calculate totals
+    total_steps    = sum(w.get('steps', 0) or 0 for w in user_workouts)
+    total_calories = sum(w.get('calories_burned', 0) or 0 for w in user_workouts)
+    total_distance = sum(w.get('distance', 0) or 0 for w in user_workouts)
+
+    # Let the user pick which stat to share
+    stat_choice = st.selectbox(
+        "Choose a stat to share:",
+        ["Steps", "Calories Burned", "Distance"]
+    )
+
+    if stat_choice == "Steps":
+        default_msg = f"I just hit {total_steps:,} total steps! Who wants to join me for my next workout?"
+    elif stat_choice == "Calories Burned":
+        default_msg = f"I just burned {total_calories:.0f} calories! Feeling great 🔥"
+    else:
+        default_msg = f"I just covered {total_distance:.1f} km! Let's get moving 📍"
+
+    # Let the user customize message
+    custom_msg = st.text_area("Customize your message:", value=default_msg)
+
+    # Show them a preview of what they are sharing
+    st.info(f"**Preview:** {custom_msg}")
+
+    # The actual button
+    if st.button("🚀 Share to Community Feed"):
+        try:
+            create_shared_post(user_id, custom_msg)
+            update_streak(user_id)
+            st.success("Successfully posted to the Community Feed!")
+            st.balloons()
+        except Exception as e:
+            st.error(f"Failed to post: {e}")
+
+
+#----------------------
+# AI page
+#-----------------------
+
+
+
+def display_ai_suggestions_tabs(user_id, suggestions):
+    """Renders the AI workout suggestions using a tabbed interface."""
+    st.subheader("Your Custom Suggestions")
+    
+    # 1. Extract the workout types to use as tab names
+    tab_names = [suggestion['workout_type'] for suggestion in suggestions]
+    
+    # 2. Create the tabs
+    tabs = st.tabs(tab_names)
+    
+    # 3. Populate each tab
+    for i, suggestion in enumerate(suggestions):
+        with tabs[i]:
+            st.markdown(f"### 🏅 {suggestion['title']}")
+            st.caption(f"**⏱️ Total Time:** {suggestion['total_time']} mins")
+            
+            # Using an info box makes the description pop
+            st.info(suggestion['description'])
+            
+            # Put the date picker and button side-by-side for a cleaner look
+            col1, col2 = st.columns([2, 1])
+            with col1:
+                future_date = st.date_input(
+                    "Schedule for:", 
+                    value=datetime.date.today() + datetime.timedelta(days=1),
+                    min_value=datetime.date.today(),
+                    key=f"date_{i}"
+                )
+            with col2:
+                st.write("") # A little spacer to push the button down so it aligns
+                st.write("")
+                if st.button("Add to Calendar", key=f"add_{i}", use_container_width=True, type="primary"):
+                    schedule_ai_workout(user_id, suggestion['workout_type'], future_date, suggestion['total_time'])
+                    st.success(f"Added to {suggestion['workout_type']} Calendar!")
+                    st.rerun()
+
+def display_scheduled_workouts(scheduled_workouts):
+    """Renders the list of future workouts with a delete option."""
+    st.subheader("🗓️ Your Scheduled AI Workouts")
+    
+    if not scheduled_workouts:
+        st.info("You don't have any workouts scheduled for the future.")
+    else:
+        for workout in scheduled_workouts:
+            with st.container(border=True):
+                col1, col2, col3 = st.columns([3, 2, 1])
+                
+                with col1:
+                    # Clean up the timestamp for display
+                    date_str = str(workout.StartTimestamp)[:10]
+                    st.write(f"**{date_str}**")
+                    
+                with col2:
+                    st.write(f"{workout.WorkoutType} ({workout.TotalTimeMinutes} min)")
+                    
+                with col3:
+                    if st.button("🗑️ Delete", key=f"del_{workout.WorkoutId}"):
+                        delete_workout(workout.WorkoutId)
+                        st.rerun()
+
+
+#----------------------------
+# community page
+#---------------------
+def display_community_feed(posts):
+    """Renders the entire list of community posts or an empty state."""
+    if not posts:
+        st.info("Your friends haven't posted anything yet! Check back later.")
+    else:
+        for post in posts:
+            # We call the existing display_post function for each item
+            display_post(
+                username=post['username'],
+                user_image=post['user_image'],
+                timestamp=str(post['timestamp']), # Ensure it's a string for Streamlit
+                content=post['content'],
+                post_image=post['post_image']
+            )
+
+#-----------------------
+# home page
+#----------------------
+def display_activity_grid():
+    """Displays the horizontal grid of activity buttons and handles selection state."""
+    # --- Custom CSS ---
+    st.markdown("""
+        <style>
+        .activity-card {
+            background-color: #D9D9D9;
+            border-radius: 15px;
+            height: 100px; width: 100px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto; transition: 0.3s;
+        }
+        .activity-card:hover { background-color: #BDBDBD; }
+        .activity-label { text-align: center; font-size: 14px; margin-top: 8px; color: #333; }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # --- Horizontal Activity Grid ---
+    cols = st.columns(6)
+    activities = [
+        ("Cycling", "🚲"), ("Hiking", "🥾"), ("Running", "🏃"), 
+        ("Swimming", "🏊"), ("Gym", " 🏋️"), ("New Activity", "➕")
+    ]
+
+    for i, (name, icon) in enumerate(activities):
+        with cols[i]:
+            st.markdown(f'<div class="activity-card"><span style="font-size: 40px;">{icon}</span></div>', unsafe_allow_html=True)
+            
+            # This button Updates session state
+            if st.button(f"Log {name}", key=f"btn_{name}"):
+                st.session_state.selected_workout_type = name
+
+#------------------------
+# loggin page
+#------------------------
+def display_login_form():
+    """Displays the login UI and returns the user inputs."""
+    st.title("Login to SDS Fitness")
+            
+    username = st.text_input("Enter your Username:")
+    password = st.text_input("Enter your password", type="password")
+    
+    # The button returns True when clicked
+    submitted = st.button("Login")
+    
+    return username, password, submitted
+
+# -----------------
+# profile page 
+# ------------------
+def display_profile_header(full_name, username, profile_image, friends_count):
+    """Displays the user's profile picture, name, and basic info."""
+    if profile_image:
+        st.image(profile_image, width=150)
+    
+    st.subheader(full_name)
+    st.write(f"@{username} | {friends_count} friends")
+
+
+def display_streak_details(current_streak):
+    """Displays the detailed streak metric and conditional motivational messages."""
+    st.subheader("🔥 Workout Streak")
+
+    # Display the current streak
+    if current_streak > 0:
+        st.metric(label="Current Streak", value=f"{current_streak} 🔥")
+    else:
+        st.metric(label="Current Streak", value="0 😴")
+
+    # Motivation messages based on the current streak
+    if current_streak == 0:
+        st.info("No active streak. Log a workout to start one!")
+    elif current_streak >= 7:
+        st.success(f"You're on a {current_streak}-day streak! Incredible consistency 🏆")
+    elif current_streak >= 3:
+        st.success(f"You're on a {current_streak}-day streak! Keep it going 💪")
+    else:
+        st.success(f"You're on a {current_streak}-day streak! Great start 🔥")
+
+# -----------------------
+# sing_up page
+# -----------------------
+def display_signup_form():
+    """Displays the sign-up form and returns all user inputs."""
+    with st.form("signup_form"):
+        st.subheader("Create a New Account")
+        
+        name = st.text_input("Enter your name")
+        username = st.text_input("Enter your unique username")
+        password = st.text_input("Create a unique password", type="password")
+        dob = st.date_input("Insert your DOB")
+        image = st.text_input("Upload your profile picture (URL)")   
+
+        # The button returns True only when clicked
+        submitted = st.form_submit_button("Sign Up")
+        
+        return name, username, password, dob, image, submitted
