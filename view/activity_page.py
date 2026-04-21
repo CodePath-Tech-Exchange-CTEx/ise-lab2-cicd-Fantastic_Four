@@ -1,5 +1,6 @@
 import streamlit as st
 from streamlit_calendar import calendar
+from data_fetcher import get_user_workouts, create_shared_post, get_all_calendar_events, update_streak
 
 # Import our backend functions
 from data_fetcher import get_user_workouts, create_shared_post, get_user_workout_dates, update_streak
@@ -21,24 +22,33 @@ def show_activity_page(user_id):
     
     st.divider()
 
-     # ==========================================
+    # ==========================================
     # The calendar Feature
     # ==========================================
-    st.subheader("Calendar")
+    st.subheader("Training Calendar")
 
+    # Fetch the richly formatted events we just built
+    calendar_events = get_all_calendar_events(user_id)
 
-    # Format them for the calendar component
-    calendar_events = []
-    for date in workout_dates:
-        # Create a formatted dictionary for each date
-        single_event = {"title": "🏃‍♂️ Workout", "start": date}
-        
-        # Add it to our master list
-        calendar_events.append(single_event)
+    # Configure the premium look and feel
+    calendar_options = {
+        "headerToolbar": {
+            "left": "today prev,next",
+            "center": "title",
+            "right": "dayGridMonth,timeGridWeek,listWeek",
+        },
+        "initialView": "dayGridMonth",
+        "navLinks": True, # Allows clicking day numbers to jump to daily view
+        "eventBorderRadius": "6px", # Rounds the event corners
+        "themeSystem": "standard",
+        "height": 600, # Gives the calendar room to breathe
+    }
 
-    # Draw the calendar on the screen!
-    calendar(events=calendar_events)
+    # Render the calendar with the new options
+    calendar(events=calendar_events, options=calendar_options)
+
     st.divider()
+
 
     # recent workouts
     display_recent_workouts(user_workouts)

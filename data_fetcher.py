@@ -8,6 +8,10 @@ import datetime
 import random
 import uuid
 
+
+import json
+import random
+
 from zoneinfo import ZoneInfo
 
 from google.cloud import bigquery
@@ -273,6 +277,60 @@ def get_user_workout_dates(user_id):
         
     return workout_dates
 
+def get_all_calendar_events(user_id):
+    """Fetches all workouts and formats them beautifully for the Streamlit Calendar."""
+    from google.cloud import bigquery
+    client = bigquery.Client()
+    
+    # Fetch everything for this user
+    query = f"""
+        SELECT WorkoutId, WorkoutType, StartTimestamp, TotalTimeMinutes, IsScheduled
+        FROM {_table('Workouts')}
+        WHERE UserId = '{user_id}'
+    """
+    results = client.query(query).result()
+    
+    events = []
+    for row in results:
+        # Check if it's a future scheduled workout
+        is_scheduled = row.IsScheduled if hasattr(row, 'IsScheduled') else False
+        
+        # 1. Color Coding Logic
+        if is_scheduled:
+            # Planned AI Workouts: Soft Blue
+            bg_color = "#E0E7FF" 
+            border_color = "#6366F1" 
+            text_color = "#3730A3"
+            icon = "⏱️"
+        else:
+            # Completed Workouts: Solid Green
+            bg_color = "#DCFCE7" 
+            border_color = "#22C55E" 
+            text_color = "#166534"
+            icon = "✅"
+            
+        # 2. Build the Title
+        time_mins = row.TotalTimeMinutes if hasattr(row, 'TotalTimeMinutes') and row.TotalTimeMinutes else 0
+        
+        # Safe extraction of WorkoutType
+        raw_type = row.WorkoutType if hasattr(row, 'WorkoutType') and row.WorkoutType is not None else "Workout"
+        workout_name = raw_type.replace(" (AI Suggestion)", "") 
+        
+        title = f"{icon} {workout_name} ({time_mins}m)"
+        
+        # 3. Format exactly as FullCalendar expects
+        events.append({
+            "title": title,
+            "start": str(row.StartTimestamp), # ISO format works perfectly
+            "backgroundColor": bg_color,
+            "borderColor": border_color,
+            "textColor": text_color,
+            "display": "block" # Makes it look like a solid block
+        })
+        
+    return events
+
+
 # ===========================================================================
 # WRITE functions
 # ===========================================================================
@@ -329,6 +387,11 @@ def add_new_workout(user_id, workout_type, workout_data):
     
     client = bigquery.Client()
 
+    distance = 0.0
+    avg_speed = 0.0
+    elevation_gain = 0
+    difficulty = "N/A"
+
     #Setup Time and IDs
     workout_id = str(uuid.uuid4())
     miami_tz = ZoneInfo("America/New_York")
@@ -350,15 +413,25 @@ def add_new_workout(user_id, workout_type, workout_data):
     # Handle specific workout logic
     if workout_type in ["Running", "Swimming"]:
         distance = workout_data.get("miles", 0)
+    elif workout_type == "Cycling":
+        distance = workout_data.get("miles", 0.0)
+        avg_speed = workout_data.get("avg_speed", 0.0)
+        
+    elif workout_type == "Hiking":
+       
+        distance = workout_data.get("miles", 0.0)
+        elevation_gain = workout_data.get("elevation_gain", 0)
+        difficulty = workout_data.get("difficulty", "Moderate")
     else:
         distance = 0.0 # Gym doesn't track distance
-
-    # Push to the main Workouts table
+    
     workout_query = f"""
         INSERT INTO {_table('Workouts')} 
-        (WorkoutId, UserId, WorkoutType, StartTimestamp, EndTimestamp, TotalDistance, CaloriesBurned, TotalTimeMinutes, HeartRateAvg, HeartRatePeak, TotalSteps) 
+        (WorkoutId, UserId, WorkoutType, StartTimestamp, EndTimestamp, TotalDistance, CaloriesBurned, 
+         TotalTimeMinutes, HeartRateAvg, HeartRatePeak, TotalSteps, AvgSpeed, ElevationGain, Difficulty) 
         VALUES 
-        ('{workout_id}', '{user_id}', '{workout_type}', '{start_ts}', '{end_ts}', {distance}, {calories}, {total_time}, {hr_avg}, {hr_peak}, 0)
+        ('{workout_id}', '{user_id}', '{workout_type}', '{start_ts}', '{end_ts}', {distance}, {calories}, 
+         {total_time}, {hr_avg}, {hr_peak}, 0, {avg_speed}, {elevation_gain}, '{difficulty}')
     """
     client.query(workout_query).result()
 
@@ -430,3 +503,80 @@ def update_streak(user_id):
         WHERE UserId = '{user_id}'
     """
     client.query(update_query).result()
+
+# ===========================================================================
+# AI functions
+# ===========================================================================
+import json
+
+def generate_ai_workout_plan(user_id):
+    """Generates 3 workout suggestions from GenAI in JSON format."""
+    import vertexai
+    from vertexai.generative_models import GenerativeModel
+    
+    vertexai.init(project=GCP_PROJECT_ID, location="us-central1")
+    # Using JSON mode ensures Python can easily parse the 3 options
+    model = GenerativeModel(
+        "gemini-2.5-flash-lite",
+        generation_config={"response_mime_type": "application/json"}
+    )
+    
+    profile = get_user_profile(user_id)
+    username = profile.get("full_name", "athlete")
+
+    prompt = f"""
+    You are an elite fitness coach designing a plan for {username}. 
+    Provide exactly 3 distinct workout suggestions (e.g., 1 Running, 1 Swimming, 1 Gym).
+    Return the response as a JSON array containing 3 objects. 
+    Each object must have these keys:
+    - "title": A catchy title (string)
+    - "workout_type": Must be "Running", "Swimming", or "Gym" (string)
+    - "total_time": Estimated minutes (integer)
+    - "description": A short, 1-sentence summary of the workout (string)
+    """
+    
+    response = model.generate_content(prompt)
+    try:
+        # Convert the AI's string response into a Python list of dictionaries
+        return json.loads(response.text)
+    except Exception:
+        return []
+
+def schedule_ai_workout(user_id, workout_type, future_date, total_time):
+    """Saves a future workout to the database as an AI Suggestion."""
+    from google.cloud import bigquery
+    import uuid
+    client = bigquery.Client()
+    
+    workout_id = str(uuid.uuid4())
+    # Save the future date at noon just as a placeholder time
+    scheduled_ts = f"{future_date} 12:00:00"
+    
+    # We set IsScheduled to TRUE, and add '(AI Suggestion)' to the type
+    query = f"""
+        INSERT INTO {_table('Workouts')} 
+        (WorkoutId, UserId, WorkoutType, StartTimestamp, EndTimestamp, TotalTimeMinutes, IsScheduled, TotalSteps) 
+        VALUES 
+        ('{workout_id}', '{user_id}', '{workout_type} (AI Suggestion)', '{scheduled_ts}', '{scheduled_ts}', {total_time}, TRUE, 0)
+    """
+    client.query(query).result()
+
+def get_scheduled_workouts(user_id):
+    """Fetches only future scheduled workouts."""
+    from google.cloud import bigquery
+    client = bigquery.Client()
+    
+    query = f"""
+        SELECT WorkoutId, WorkoutType, StartTimestamp, TotalTimeMinutes
+        FROM {_table('Workouts')}
+        WHERE UserId = '{user_id}' AND IsScheduled = TRUE
+        ORDER BY StartTimestamp ASC
+    """
+    return list(client.query(query).result())
+
+def delete_workout(workout_id):
+    """Deletes a specific workout by ID."""
+    from google.cloud import bigquery
+    client = bigquery.Client()
+    query = f"DELETE FROM {_table('Workouts')} WHERE WorkoutId = '{workout_id}'"
+    client.query(query).result()

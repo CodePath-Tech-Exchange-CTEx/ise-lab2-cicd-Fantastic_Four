@@ -154,7 +154,7 @@ def display_genai_advice(timestamp, content, image):
 def display_dynamic_workout_form(user_id, selected_type):
     """Displays the dynamic input form based on the workout category selected."""
     
-    if selected_type in ["Running", "Swimming", "Gym"]:
+    if selected_type in ["Running", "Swimming", "Gym","Hiking","Cycling"]:
         st.subheader(f"Log your {selected_type} workout")
 
         # Common inputs for all workouts side-by-side (Date removed)
@@ -189,6 +189,52 @@ def display_dynamic_workout_form(user_id, selected_type):
                 "hr": hr,
                 "hr_peak": hr_peak, 
                 "calories": calories
+            }
+
+
+        elif selected_type == "Cycling":
+            col1, col2 = st.columns(2)
+            with col1:
+                total_time = st.number_input("Total time (minutes)", min_value=0)
+                miles = st.number_input("Total miles", min_value=0.0)
+                avg_speed = st.number_input("Average Speed (mph)", min_value=0.0) 
+            with col2:
+                calories = st.number_input("Calories", min_value=0)
+                hr = st.number_input("Heart rate average", min_value=0)
+                bike_type = st.selectbox("Bike Type", ["Road", "Mountain", "Indoor/Spin"])
+
+            workout_data = {
+                "start_time": start_time,
+                "end_time": end_time,
+                "total_time": total_time,
+                "miles": miles,
+                "avg_speed": avg_speed,
+                "calories": calories,
+                "hr": hr,
+                "bike_type": bike_type
+            }
+
+
+        elif selected_type == "Hiking":
+            col1, col2 = st.columns(2)
+            with col1:
+                total_time = st.number_input("Total time (minutes)", min_value=0)
+                miles = st.number_input("Total miles", min_value=0.0)
+                elevation_gain = st.number_input("Elevation Gain (ft)", min_value=0) 
+            with col2:
+                calories = st.number_input("Calories", min_value=0)
+                hr = st.number_input("Heart rate average", min_value=0)
+                difficulty = st.select_slider("Terrain Difficulty", options=["Easy", "Moderate", "Hard", "Extreme"])
+
+            workout_data = {
+                "start_time": start_time,
+                "end_time": end_time,
+                "total_time": total_time,
+                "miles": miles,
+                "elevation_gain": elevation_gain,
+                "calories": calories,
+                "hr": hr,
+                "difficulty": difficulty
             }
 
         elif selected_type == "Gym":
@@ -248,5 +294,5 @@ def display_dynamic_workout_form(user_id, selected_type):
             st.rerun()
 
     # Placeholder for Cycling and Hiking until you build them out
-    elif selected_type in ["Cycling", "Hiking"]:
+    elif selected_type in ["New Activity"]:
         st.info(f"The form for {selected_type} is coming soon! Check back later.")
