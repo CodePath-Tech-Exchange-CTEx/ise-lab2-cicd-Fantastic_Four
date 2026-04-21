@@ -8,12 +8,15 @@ import datetime
 import random
 import uuid
 
+<<<<<<< unit3-data-fetcher-fix-amari
+=======
 
 import json
 import random
 
 from zoneinfo import ZoneInfo
 
+>>>>>>> main
 from google.cloud import bigquery
 
 import vertexai
@@ -25,6 +28,68 @@ from vertexai.generative_models import GenerativeModel
 GCP_PROJECT_ID = "kevin-beltran-pena-uprm"
 DATASET = "ISE"
 # ---------------------------------------------------------------------------
+<<<<<<< unit3-data-fetcher-fix-amari
+
+
+def _table(name):
+    """Helper that returns a fully-qualified BigQuery table reference."""
+    return f"`{GCP_PROJECT_ID}.{DATASET}.{name}`"
+
+
+# ===========================================================================
+# READ functions
+# ===========================================================================
+
+def get_user_sensor_data(user_id, workout_id):
+    """Returns a list of timestamped sensor readings for a given workout.
+
+    The workout must belong to the given user_id (verified via a JOIN with
+    the Workouts table, since SensorData has no UserId column of its own).
+
+    Input:  user_id, workout_id
+    Output: list of dicts with keys sensor_type, timestamp, data, units
+    """
+    client = bigquery.Client()
+
+    query = f"""
+        SELECT
+            st.Name        AS sensor_type,
+            sd.Timestamp   AS timestamp,
+            sd.SensorValue AS data,
+            st.Units       AS units
+        FROM {_table('SensorData')} sd
+        JOIN {_table('SensorTypes')} st
+          ON sd.SensorId = st.SensorId
+        JOIN {_table('Workouts')} w
+          ON sd.WorkoutID = w.WorkoutId
+        WHERE sd.WorkoutID = '{workout_id}'
+          AND w.UserId     = '{user_id}'
+        ORDER BY sd.Timestamp
+    """
+
+    query_job = client.query(query)
+    results = query_job.result()
+
+    sensor_list = []
+    for row in results:
+        sensor_list.append({
+            "sensor_type": row.sensor_type,
+            "timestamp":   row.timestamp,
+            "data":        row.data,
+            "units":       row.units,
+        })
+
+    return sensor_list
+
+
+def get_user_workouts(user_id):
+    """Returns a list of the user's workouts.
+
+    Input:  user_id
+    Output: list of dicts with keys workout_id, start_timestamp,
+            end_timestamp, start_lat_lng, end_lat_lng,
+            distance, steps, calories_burned
+=======
 
 
 def _table(name):
@@ -42,10 +107,25 @@ def get_user_workouts(user_id):
     Input:  user_id
     Output: list of dicts with keys workout_id, workout_type, start_timestamp,
             end_timestamp, distance, steps, calories_burned, total_time, hr_avg, hr_peak
+>>>>>>> main
     """
     from google.cloud import bigquery
     client = bigquery.Client()
 
+<<<<<<< unit3-data-fetcher-fix-amari
+    query = f"""
+        SELECT
+            WorkoutId,
+            StartTimestamp,
+            EndTimestamp,
+            StartLocationLat,
+            StartLocationLong,
+            EndLocationLat,
+            EndLocationLong,
+            TotalDistance,
+            TotalSteps,
+            CaloriesBurned
+=======
     # Updated query
     query = f"""
         SELECT
@@ -59,6 +139,7 @@ def get_user_workouts(user_id):
             TotalTimeMinutes,
             HeartRateAvg,
             HeartRatePeak
+>>>>>>> main
         FROM {_table('Workouts')}
         WHERE UserId = '{user_id}'
         ORDER BY StartTimestamp DESC
@@ -69,6 +150,33 @@ def get_user_workouts(user_id):
 
     workouts_list = []
     for row in results:
+<<<<<<< unit3-data-fetcher-fix-amari
+        # Lat/lng pairs may be NULL in the database — guard gracefully
+        start_lat_lng = (
+            (row.StartLocationLat, row.StartLocationLong)
+            if row.StartLocationLat is not None and row.StartLocationLong is not None
+            else None
+        )
+        end_lat_lng = (
+            (row.EndLocationLat, row.EndLocationLong)
+            if row.EndLocationLat is not None and row.EndLocationLong is not None
+            else None
+        )
+
+        workouts_list.append({
+            "workout_id":       row.WorkoutId,
+            "start_timestamp":  row.StartTimestamp,
+            "end_timestamp":    row.EndTimestamp,
+            "start_lat_lng":    start_lat_lng,
+            "end_lat_lng":      end_lat_lng,
+            "distance":         row.TotalDistance,
+            "steps":            row.TotalSteps,
+            "calories_burned":  row.CaloriesBurned,
+        })
+
+    return workouts_list
+
+=======
 
         workouts_list.append({
             "workout_id":       row.WorkoutId,
@@ -84,6 +192,7 @@ def get_user_workouts(user_id):
         })
 
     return workouts_list
+>>>>>>> main
 
 def get_user_profile(user_id):
     """Returns profile information for the given user.
@@ -108,6 +217,10 @@ def get_user_profile(user_id):
     user_job    = client.query(query_for_user)
     friends_job = client.query(query_for_friends)
 
+<<<<<<< unit3-data-fetcher-fix-amari
+    # Collect friends first (single pass — avoids re-iteration issues)
+=======
+>>>>>>> main
     friends_list = [row.UserId2 if hasattr(row, 'UserId2') else row[0]
                     for row in friends_job.result()]
 
@@ -143,6 +256,10 @@ def get_user_posts(user_id):
     query_job = client.query(query)
     posts_results = query_job.result()
 
+<<<<<<< unit3-data-fetcher-fix-amari
+    # Grab profile once so we have username / avatar for every post
+=======
+>>>>>>> main
     user_profile = get_user_profile(user_id)
 
     posts_list = []
@@ -158,6 +275,87 @@ def get_user_posts(user_id):
         })
 
     return posts_list
+<<<<<<< unit3-data-fetcher-fix-amari
+
+
+def get_genai_advice(user_id):
+    """Returns one piece of AI-generated fitness advice personalised to the user.
+
+    Images are included ~30 % of the time (as required by the spec).
+
+    Input:  user_id
+    Output: dict with keys advice_id, timestamp, content, image
+    """
+    vertexai.init(project=GCP_PROJECT_ID, location="us-central1")
+    model = GenerativeModel("gemini-2.5-flash-lite")
+
+    # Pull some user context to make the advice personalised
+    try:
+        profile  = get_user_profile(user_id)
+        workouts = get_user_workouts(user_id)
+
+        recent_steps    = workouts[0]["steps"]    if workouts else "unknown"
+        recent_calories = workouts[0]["calories_burned"] if workouts else "unknown"
+        username        = profile.get("full_name", "athlete")
+
+        prompt = (
+            f"You are a supportive fitness coach. Write exactly one short, "
+            f"motivational sentence for {username}, who recently logged "
+            f"{recent_steps} steps and burned {recent_calories} calories. "
+            f"Be encouraging and specific."
+        )
+    except Exception:
+        # Fallback prompt if data fetching fails
+        prompt = (
+            "Write exactly one short, motivational sentence for someone "
+            "who is actively tracking their workouts."
+        )
+
+    ai_response    = model.generate_content(prompt)
+    generated_text = ai_response.text.strip()
+
+    # Include a motivational image roughly 30 % of the time
+    image_options = [
+        "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800",
+        "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800",
+        "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800",
+    ]
+    chosen_image = random.choice(image_options) if random.random() < 0.30 else None
+
+    return {
+        "advice_id": str(uuid.uuid4()),
+        "timestamp": str(datetime.datetime.now()),
+        "content":   generated_text,
+        "image":     chosen_image,
+    }
+
+
+# ===========================================================================
+# WRITE functions
+# ===========================================================================
+
+def create_shared_post(user_id, content):
+    """Inserts a new post into the BigQuery Posts table.
+
+    Input:  user_id, content (string)
+    Output: None (raises on failure)
+    """
+    client = bigquery.Client()
+
+    post_id      = str(uuid.uuid4())
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # Escape single quotes in content to prevent SQL errors
+    safe_content = content.replace("'", "\\'")
+
+    query = f"""
+        INSERT INTO {_table('Posts')} (PostId, AuthorId, Timestamp, ImageUrl, Content)
+        VALUES ('{post_id}', '{user_id}', '{current_time}', NULL, '{safe_content}')
+    """
+
+    query_job = client.query(query)
+    query_job.result()
+=======
 
 
 def get_genai_advice(user_id):
@@ -578,3 +776,4 @@ def delete_workout(workout_id):
     client = bigquery.Client()
     query = f"DELETE FROM {_table('Workouts')} WHERE WorkoutId = '{workout_id}'"
     client.query(query).result()
+>>>>>>> main
