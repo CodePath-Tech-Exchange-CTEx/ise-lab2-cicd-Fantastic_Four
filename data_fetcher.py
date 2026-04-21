@@ -102,7 +102,9 @@ def _table(name):
 # ===========================================================================
 
 def get_user_workouts(user_id):
-    """Returns a list of the user's workouts matching the updated BigQuery schema.
+    '''Returns a list of the users workouts matching the updated BigQuery schema'''
+<<<<<<< unit3-data-fetcher-fix-amari
+.
 
     Input:  user_id
     Output: list of dicts with keys workout_id, workout_type, start_timestamp,
