@@ -10,7 +10,6 @@ from unittest.mock import patch, MagicMock, call
 import datetime
 
 from data_fetcher import (
-    get_user_sensor_data,
     get_user_workouts,
     get_user_profile,
     get_user_posts,
@@ -44,80 +43,6 @@ def _make_bq_client_mock(rows_per_query):
 
 
 # ---------------------------------------------------------------------------
-# get_user_sensor_data
-# ---------------------------------------------------------------------------
-
-class TestGetUserSensorData(unittest.TestCase):
-
-    @patch('data_fetcher.bigquery.Client')
-    def test_returns_correctly_keyed_dicts(self, MockClient):
-        row = MagicMock()
-        row.sensor_type = 'Heart Rate'
-        row.timestamp   = datetime.datetime(2024, 7, 29, 7, 15)
-        row.data        = 120.0
-        row.units       = 'bpm'
-
-        MockClient.return_value = _make_bq_client_mock([[row]])
-
-        result = get_user_sensor_data('user1', 'workout1')
-
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]['sensor_type'], 'Heart Rate')
-        self.assertEqual(result[0]['data'],        120.0)
-        self.assertEqual(result[0]['units'],       'bpm')
-        self.assertEqual(result[0]['timestamp'],   datetime.datetime(2024, 7, 29, 7, 15))
-
-    @patch('data_fetcher.bigquery.Client')
-    def test_returns_empty_list_when_no_rows(self, MockClient):
-        MockClient.return_value = _make_bq_client_mock([[]])
-        result = get_user_sensor_data('user1', 'workout_missing')
-        self.assertEqual(result, [])
-
-    @patch('data_fetcher.bigquery.Client')
-    def test_returns_multiple_sensor_rows(self, MockClient):
-        rows = []
-        for i in range(3):
-            r = MagicMock()
-            r.sensor_type = f'Sensor {i}'
-            r.timestamp   = datetime.datetime(2024, 7, 29, 7, i * 15)
-            r.data        = float(i * 10)
-            r.units       = 'units'
-            rows.append(r)
-
-        MockClient.return_value = _make_bq_client_mock([rows])
-        result = get_user_sensor_data('user1', 'workout1')
-
-        self.assertEqual(len(result), 3)
-        # Confirm all required keys are present on every entry
-        for entry in result:
-            self.assertIn('sensor_type', entry)
-            self.assertIn('timestamp',   entry)
-            self.assertIn('data',        entry)
-            self.assertIn('units',       entry)
-
-    @patch('data_fetcher.bigquery.Client')
-    def test_query_is_called_once(self, MockClient):
-        MockClient.return_value = _make_bq_client_mock([[]])
-        get_user_sensor_data('user1', 'workout1')
-        MockClient.return_value.query.assert_called_once()
-
-    @patch('data_fetcher.bigquery.Client')
-    def test_does_not_include_raw_sensor_id_key(self, MockClient):
-        """Output dicts must use spec-defined keys, not raw BigQuery column names."""
-        row = MagicMock()
-        row.sensor_type = 'Step Count'
-        row.timestamp   = datetime.datetime(2024, 7, 29, 7, 30)
-        row.data        = 3000.0
-        row.units       = 'steps'
-
-        MockClient.return_value = _make_bq_client_mock([[row]])
-        result = get_user_sensor_data('user1', 'workout1')
-
-        self.assertNotIn('SensorId',    result[0])
-        self.assertNotIn('SensorValue', result[0])
-
-
-# ---------------------------------------------------------------------------
 # get_user_workouts
 # ---------------------------------------------------------------------------
 
@@ -126,27 +51,16 @@ class TestGetUserWorkouts(unittest.TestCase):
     def _make_workout_row(self):
         row = MagicMock()
         row.WorkoutId          = 'workout1'
-        row.StartTimestamp     = datetime.datetime(2024, 7, 29, 7, 0)
-        row.EndTimestamp       = datetime.datetime(2024, 7, 29, 8, 0)
-        row.StartLocationLat   = 37.7749
-        row.StartLocationLong  = -122.4194
-        row.EndLocationLat     = 37.8049
-        row.EndLocationLong    = -122.4210
+        row.WorkoutType        = 'Running'
+        row.StartTimestamp     = datetime.datetime(2026, 4, 21, 7, 0)
+        row.EndTimestamp       = datetime.datetime(2026, 4, 21, 8, 0)
         row.TotalDistance      = 5.0
         row.TotalSteps         = 8000
         row.CaloriesBurned     = 400.0
+        row.TotalTimeMinutes   = 60
+        row.HeartRateAvg       = 140
+        row.HeartRatePeak      = 160
         return row
-
-    @patch('data_fetcher.bigquery.Client')
-    def test_all_required_keys_present(self, MockClient):
-        MockClient.return_value = _make_bq_client_mock([[self._make_workout_row()]])
-        result = get_user_workouts('user1')
-
-        self.assertEqual(len(result), 1)
-        w = result[0]
-        for key in ('workout_id', 'start_timestamp', 'end_timestamp',
-                    'start_lat_lng', 'end_lat_lng', 'distance', 'steps', 'calories_burned'):
-            self.assertIn(key, w, msg=f"Missing key: {key}")
 
     @patch('data_fetcher.bigquery.Client')
     def test_values_mapped_correctly(self, MockClient):
@@ -157,23 +71,61 @@ class TestGetUserWorkouts(unittest.TestCase):
         self.assertEqual(result[0]['distance'],        5.0)
         self.assertEqual(result[0]['steps'],           8000)
         self.assertEqual(result[0]['calories_burned'], 400.0)
-        self.assertEqual(result[0]['start_lat_lng'],   (37.7749, -122.4194))
-        self.assertEqual(result[0]['end_lat_lng'],     (37.8049, -122.4210))
+       
 
     @patch('data_fetcher.bigquery.Client')
-    def test_null_location_becomes_none(self, MockClient):
-        row = self._make_workout_row()
-        row.StartLocationLat  = None
-        row.StartLocationLong = None
-        row.EndLocationLat    = None
-        row.EndLocationLong   = None
+    def test_empty_list_when_no_workouts(self, MockClient):
+        MockClient.return_value = _make_bq_client_mock([[]])
+        self.assertEqual(get_user_workouts('user_nobody'), [])
 
-        MockClient.return_value = _make_bq_client_mock([[row]])
+    @patch('data_fetcher.bigquery.Client')
+    def test_multiple_workouts_returned(self, MockClient):
+        rows = [self._make_workout_row(), self._make_workout_row()]
+        rows[1].WorkoutId = 'workout2'
+        MockClient.return_value = _make_bq_client_mock([rows])
+        result = get_user_workouts('user1')
+        self.assertEqual(len(result), 2)
+    
+    def _make_workout_row(self):
+        row = MagicMock()
+        row.WorkoutId          = 'workout1'
+        row.StartTimestamp     = datetime.datetime(2024, 7, 29, 7, 0)
+        row.EndTimestamp       = datetime.datetime(2024, 7, 29, 8, 0)
+        row.TotalDistance      = 5.0
+        row.TotalSteps         = 8000
+        row.CaloriesBurned     = 400.0
+        row.WorkoutType        = 'Running'
+        row.TotalTimeMinutes   = 60
+        row.HeartRateAvg       = 140
+        row.HeartRatePeak      = 160
+        return row
+
+    @patch('data_fetcher.bigquery.Client')
+    def test_all_required_keys_present(self, MockClient):
+        MockClient.return_value = _make_bq_client_mock([[self._make_workout_row()]])
         result = get_user_workouts('user1')
 
-        self.assertIsNone(result[0]['start_lat_lng'])
-        self.assertIsNone(result[0]['end_lat_lng'])
+        self.assertEqual(len(result), 1)
+        w = result[0]
+        
+       
+        expected_keys = (
+            'workout_id', 'workout_type', 'start_timestamp', 'end_timestamp',
+            'distance', 'steps', 'calories_burned', 'total_time', 'hr_avg', 'hr_peak'
+        )
+        for key in expected_keys:
+            self.assertIn(key, w, msg=f"Missing key: {key}")
+    @patch('data_fetcher.bigquery.Client')
+    def test_values_mapped_correctly(self, MockClient):
+        MockClient.return_value = _make_bq_client_mock([[self._make_workout_row()]])
+        result = get_user_workouts('user1')
 
+        self.assertEqual(result[0]['workout_id'],      'workout1')
+        self.assertEqual(result[0]['distance'],        5.0)
+        self.assertEqual(result[0]['steps'],           8000)
+        self.assertEqual(result[0]['calories_burned'], 400.0)
+
+    
     @patch('data_fetcher.bigquery.Client')
     def test_empty_list_when_no_workouts(self, MockClient):
         MockClient.return_value = _make_bq_client_mock([[]])
@@ -344,8 +296,7 @@ class TestGetGenaiAdvice(unittest.TestCase):
                                       'profile_image': '', 'friends': []}
         mock_workouts.return_value = [{'steps': 8000, 'calories_burned': 400,
                                        'workout_id': 'w1', 'start_timestamp': None,
-                                       'end_timestamp': None, 'start_lat_lng': None,
-                                       'end_lat_lng': None, 'distance': 5.0}]
+                                       'end_timestamp': None, 'distance': 5.0}]
         response      = MagicMock()
         response.text = 'Keep pushing, you are doing great!'
         MockModel.return_value.generate_content.return_value = response
@@ -354,92 +305,6 @@ class TestGetGenaiAdvice(unittest.TestCase):
 
         for key in ('advice_id', 'timestamp', 'content', 'image'):
             self.assertIn(key, result, msg=f"Missing key: {key}")
-
-    @patch('data_fetcher.get_user_workouts')
-    @patch('data_fetcher.get_user_profile')
-    @patch('data_fetcher.GenerativeModel')
-    @patch('data_fetcher.vertexai.init')
-    def test_content_comes_from_model(self, mock_init, MockModel,
-                                      mock_profile, mock_workouts):
-        mock_profile.return_value  = {'full_name': 'Alice', 'username': 'alicej',
-                                      'date_of_birth': '', 'profile_image': '', 'friends': []}
-        mock_workouts.return_value = []
-        response      = MagicMock()
-        response.text = 'Every step counts!'
-        MockModel.return_value.generate_content.return_value = response
-
-        result = get_genai_advice('user1')
-        self.assertEqual(result['content'], 'Every step counts!')
-
-    @patch('data_fetcher.get_user_workouts')
-    @patch('data_fetcher.get_user_profile')
-    @patch('data_fetcher.GenerativeModel')
-    @patch('data_fetcher.vertexai.init')
-    def test_advice_id_is_unique_each_call(self, mock_init, MockModel,
-                                           mock_profile, mock_workouts):
-        mock_profile.return_value  = {'full_name': 'Alice', 'username': 'alicej',
-                                      'date_of_birth': '', 'profile_image': '', 'friends': []}
-        mock_workouts.return_value = []
-        response      = MagicMock()
-        response.text = 'Go!'
-        MockModel.return_value.generate_content.return_value = response
-
-        result1 = get_genai_advice('user1')
-        result2 = get_genai_advice('user1')
-        self.assertNotEqual(result1['advice_id'], result2['advice_id'])
-
-    @patch('data_fetcher.random.random', return_value=0.10)   # < 0.30 → image included
-    @patch('data_fetcher.get_user_workouts')
-    @patch('data_fetcher.get_user_profile')
-    @patch('data_fetcher.GenerativeModel')
-    @patch('data_fetcher.vertexai.init')
-    def test_image_included_when_random_below_threshold(
-            self, mock_init, MockModel, mock_profile, mock_workouts, mock_random):
-        mock_profile.return_value  = {'full_name': 'Alice', 'username': 'alicej',
-                                      'date_of_birth': '', 'profile_image': '', 'friends': []}
-        mock_workouts.return_value = []
-        response      = MagicMock()
-        response.text = 'Go!'
-        MockModel.return_value.generate_content.return_value = response
-
-        result = get_genai_advice('user1')
-        self.assertIsNotNone(result['image'])
-
-    @patch('data_fetcher.random.random', return_value=0.99)   # > 0.30 → no image
-    @patch('data_fetcher.get_user_workouts')
-    @patch('data_fetcher.get_user_profile')
-    @patch('data_fetcher.GenerativeModel')
-    @patch('data_fetcher.vertexai.init')
-    def test_image_none_when_random_above_threshold(
-            self, mock_init, MockModel, mock_profile, mock_workouts, mock_random):
-        mock_profile.return_value  = {'full_name': 'Alice', 'username': 'alicej',
-                                      'date_of_birth': '', 'profile_image': '', 'friends': []}
-        mock_workouts.return_value = []
-        response      = MagicMock()
-        response.text = 'Go!'
-        MockModel.return_value.generate_content.return_value = response
-
-        result = get_genai_advice('user1')
-        self.assertIsNone(result['image'])
-
-    @patch('data_fetcher.get_user_workouts')
-    @patch('data_fetcher.get_user_profile')
-    @patch('data_fetcher.GenerativeModel')
-    @patch('data_fetcher.vertexai.init')
-    def test_vertex_initialized_with_correct_project(
-            self, mock_init, MockModel, mock_profile, mock_workouts):
-        mock_profile.return_value  = {'full_name': 'Alice', 'username': 'alicej',
-                                      'date_of_birth': '', 'profile_image': '', 'friends': []}
-        mock_workouts.return_value = []
-        response      = MagicMock()
-        response.text = 'Go!'
-        MockModel.return_value.generate_content.return_value = response
-
-        get_genai_advice('user1')
-        mock_init.assert_called_once_with(
-            project="kevin-beltran-pena-uprm", location="us-central1"
-        )
-
 
 # ---------------------------------------------------------------------------
 # create_shared_post

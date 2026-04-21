@@ -246,14 +246,48 @@ def display_dynamic_workout_form(user_id, selected_type):
 
         # Submit the form to the backend
         if st.button(f"Save {selected_type} Workout", use_container_width=True):
-            add_new_workout(user_id, selected_type, workout_data) 
-            st.success(f"{selected_type} workout logged successfully!")
+            total_time = workout_data.get("total_time", 0)
+            distance = workout_data.get("miles", 0.0)
             
-            # Reset the session state so the form closes automatically
-            st.session_state.selected_workout_type = None
-            st.rerun()
+            errors = []
 
-    # Fallback for unbuilt activities
+            if total_time <= 0:
+                errors.append("Duration must be greater than 0 minutes.")
+
+            if selected_type in ["Running", "Swimming", "Cycling", "Hiking"]:
+                if workout_data.get("miles", 0.0) <= 0:
+                    errors.append(f"Distance is required for {selected_type}.")
+
+            if selected_type == "Cycling":
+                if workout_data.get("avg_speed", 0.0) <= 0:
+                    errors.append("Average Speed must be greater than 0 mph.")
+
+            elif selected_type == "Hiking":
+                if workout_data.get("elevation_gain", 0) < 0: #not negatives
+                    errors.append("Elevation gain cannot be negative.")
+
+            elif selected_type == "Gym":
+                if not workout_data.get("exercises", []):
+                    errors.append("Please add at least one exercise.")
+                else:
+                    # Validar que cada ejercicio tenga nombre y peso/reps
+                    for i, ex in enumerate(exercises):
+                        if not ex["name"].strip():
+                            errors.append(f"Exercise {i+1} is missing a name.")
+                        if ex["sets"] <= 0 or ex["reps"] <= 0:
+                            errors.append(f"Exercise {i+1} must have sets and reps greater than 0.")
+
+
+            if errors:
+                for error in errors:
+                    st.error(f"❌ {error}")
+            else:
+                add_new_workout(user_id, selected_type, workout_data) 
+                st.success(f"{selected_type} workout logged successfully!")
+                
+                st.session_state.selected_workout_type = None
+                st.rerun()
+
     elif selected_type in ["New Activity"]:
         st.info(f"The form for {selected_type} is coming soon! Check back later.")
 
