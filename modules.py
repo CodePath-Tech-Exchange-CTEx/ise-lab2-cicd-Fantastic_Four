@@ -270,7 +270,6 @@ def display_dynamic_workout_form(user_id, selected_type):
                 if not workout_data.get("exercises", []):
                     errors.append("Please add at least one exercise.")
                 else:
-                    # Validar que cada ejercicio tenga nombre y peso/reps
                     for i, ex in enumerate(exercises):
                         if not ex["name"].strip():
                             errors.append(f"Exercise {i+1} is missing a name.")
