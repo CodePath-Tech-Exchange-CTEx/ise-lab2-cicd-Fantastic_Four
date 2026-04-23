@@ -91,7 +91,19 @@ def display_signup_form():
         name = st.text_input("Enter your name")
         username = st.text_input("Enter your unique username")
         password = st.text_input("Create a unique password", type="password")
-        dob = st.date_input("Insert your DOB")
+        
+        # Define the minimum and maximum allowed dates
+        min_dob = datetime.date(1900, 1, 1) # Allows dates going back to 1900
+        max_dob = datetime.date.today()     # Prevents future dates
+        
+        # Pass the limits into the date_input
+        dob = st.date_input(
+            "Insert your DOB", 
+            min_value=min_dob, 
+            max_value=max_dob,
+            value=None # Optional: Forces the user to pick a date instead of defaulting to today
+        )
+        
         image = st.text_input("Upload your profile picture (URL)")   
 
         # The button returns True only when clicked
