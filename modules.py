@@ -72,7 +72,7 @@ def display_my_custom_component(value):
 
 def display_login_form():
     """Displays the login UI and returns the user inputs."""
-    st.title("Login to SDS Fitness")
+    st.title("Login to WebFit")
             
     username = st.text_input("Enter your Username:")
     password = st.text_input("Enter your password", type="password")
