@@ -7,7 +7,7 @@ from data_fetcher import create_user
 from modules import display_signup_form
 
 def sign_up_page():
-    st.title("Join SDS Fitness 💪")
+    st.title("Join WebFit 💪")
     
     # ==========================================
     # 1. View: Display the form and grab inputs

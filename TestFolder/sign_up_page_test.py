@@ -28,7 +28,7 @@ class TestSignUpPageDisplay(unittest.TestCase):
         
         sign_up_page()
         
-        mock_title.assert_called_once_with("Join SDS Fitness 💪")
+        mock_title.assert_called_once_with("Join WebFit 💪")
 
     @patch('streamlit.success')
     @patch('view.sign_up_page.create_user')
